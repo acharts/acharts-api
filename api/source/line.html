@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Cartesian'>/**
+</span> * @fileOverview 线形式的数据图序列
+ * @ignore
+ */
+
+var 
+  Cartesian = require(&#39;./cartesian&#39;),
+  Util = require(&#39;../../util&#39;);
+
+function trySet(obj,name,value){
+  if(obj &amp;&amp; !obj[name]){
+    obj[name] = value;
+  }
+}
+
+
+
+<span id='Chart-Series-Line'>/**
+</span> * @class Chart.Series.Line
+ * 使用线连接数据的数据图序列
+ * @extends Chart.Series.Cartesian
+ */
+function Line(cfg){
+  Line.superclass.constructor.call(this,cfg);
+}
+
+Util.extend(Line,Cartesian);
+
+
+
+Line.ATTRS = {
+
+  type : &#39;line&#39;,
+  elCls : &#39;x-chart-line-series&#39;,
+<span id='Chart-Series-Line-property-connectNulls'>  /**
+</span>   * 是否忽略null的值，连接null2边的值
+   * @type {Boolean}
+   */
+  connectNulls : false,  
+<span id='Chart-Series-Line-property-line'>  /**
+</span>   * 线的配置
+   * @type {Object}
+   */
+  line : null,
+<span id='Chart-Series-Line-property-lineActived'>  /**
+</span>   * 处于触发状态的线的配置项
+   * @type {Object}
+   */
+  lineActived : null,
+ 
+<span id='Chart-Series-Line-property-tolerance'>  /**
+</span>   * 增大线的触发范围
+   * @type {Number}
+   */
+  tolerance : 20,
+<span id='Chart-Series-Line-property-smooth'>  /**
+</span>   * 是否平滑的线
+   * @type {Boolean}
+   */
+  smooth : false
+};
+
+Util.augment(Line,{
+
+<span id='Chart-Series-Line-method-processColor'>  /**
+</span>   * @protected
+   * 处理颜色
+   */
+  processColor : function(){
+    var _self = this,
+      color = _self.get(&#39;color&#39;);
+    if(color){
+      var line = _self.get(&#39;line&#39;),
+        markers = _self.get(&#39;markers&#39;);
+      trySet(line,&#39;stroke&#39;,color);
+      if(markers &amp;&amp; !/http/.test(markers.marker.symbol)){
+        trySet(markers.marker,&#39;stroke&#39;,color);
+        trySet(markers.marker,&#39;fill&#39;,color);
+      }
+    }
+  },
+ 
+<span id='Chart-Series-Line-method-onStickyTracking'>  /**
+</span>   * @protected
+   * 鼠标在画布上移动
+   */
+  onStickyTracking : function(ev){
+    var _self = this,
+      point = ev.point,
+      markersGroup = _self.get(&#39;markersGroup&#39;),
+      marker = _self.getSnapMarker(point);
+    markersGroup &amp;&amp; markersGroup.setActivedItem(marker);
+  },
+<span id='Chart-Series-Line-method-changeShapes'>  /**
+</span>   * @protected
+   * 内部图形发生改变
+   */
+  changeShapes : function(points,animate){
+
+    points = points || this.getPoints();
+
+    var _self = this,
+      //points = _self.getPoints(),
+      lineShape = _self.get(&#39;lineShape&#39;),
+      path = _self.points2path(points);
+
+    if(animate == null){
+      animate = _self.get(&#39;animate&#39;);
+    }
+    if(lineShape){
+      if(animate){
+        if(Util.svg &amp;&amp; _self.get(&#39;smooth&#39;)){ //曲线图，先获取到达的path
+          var prePath = lineShape.getPath();
+          lineShape.attr(&#39;path&#39;,path);
+          path = lineShape.attr(&#39;path&#39;);
+          lineShape.attr(&#39;path&#39;,prePath);
+        }
+
+        Util.animPath(lineShape,path);
+      }else{
+        lineShape.attr(&#39;path&#39;,path);
+      }
+      
+    }
+  },
+<span id='global-method-draw'>  /**
+</span>   * @protected
+   * @ignore
+   */
+  draw : function(points,callback){
+
+    var _self = this,
+      animate = _self.get(&#39;animate&#39;),
+      duration = _self.get(&#39;duration&#39;),
+      lineShape,
+      path = &#39;&#39;;
+
+    if(!animate){
+      path = _self.points2path(points);
+      lineShape = _self._createLine(path);
+      Util.each(points,function(point){
+        _self._drawPoint(point);
+      });
+
+      _self.drawInner(points);
+      after();
+    }else{
+      lineShape = _self._createLine(path);
+      if(_self.isInCircle()){
+        _self.circleAnimate(points,lineShape);
+      }else{
+        var cur = 0,
+          sub = [],
+          count = points.length;
+
+        //动画生成线和对应的点
+        Util.animStep(duration,function(factor){
+          var pre = cur;
+          cur = parseInt((factor) * count,10);
+          if(cur &gt; count - 1){
+            cur = count - 1;
+          }
+          
+          if(cur != pre){
+            sub = points.slice(0,cur + 1);
+            path = _self.points2path(sub);
+            lineShape.attr(&#39;path&#39;,path);
+            _self.drawInner(sub);
+            for(var i = pre; i&lt; cur; i++){
+              _self._drawPoint(points[i]);
+            }
+            
+          }
+          if(factor == 1){
+            _self._drawPoint(points[cur]);
+          }
+        },after);
+      }
+      
+    }
+    //_self.set(&#39;lineShape&#39;,lineShape);
+<span id='Chart-Series-Line-method-after'>    /**
+</span>     * @private
+     */
+    function after(){
+      
+      _self.drawTracker(points);
+      callback &amp;&amp; callback();
+    }
+    
+  },
+<span id='Chart-Series-Line-method-circleAnimate'>  /**
+</span>   * 在圆中时的动画
+   */
+  circleAnimate : function(points,lineShape){
+    var _self = this,
+      circle = _self.getCircle(),
+      center = circle.getCenter(),
+      initPoints = [],
+      baseValue = _self.getBaseValue(),
+      path;
+    Util.each(points,function(point){
+      var item = Util.mix({
+        value : baseValue
+      },center);
+      initPoints.push(item);
+      _self._drawPoint(item);
+    });
+    path = _self.points2path(initPoints);
+    lineShape.attr(&#39;path&#39;,path);
+    _self.drawInner(initPoints);
+
+    _self.repaint();
+
+  },
+<span id='Chart-Series-Line-method-drawInner'>  /**
+</span>   * @protected
+   * 绘制内部内容
+   */
+  drawInner : function(points){
+
+  },
+  //绘制节点相关的label,marker
+  _drawPoint : function(point){
+    var _self = this;
+    if(_self.get(&#39;markers&#39;) &amp;&amp; !_self.get(&#39;markersGroup&#39;).get(&#39;single&#39;)){ //如果只有一个marker暂时不生成
+      _self.addMarker(point);
+    }
+    if(_self.get(&#39;labels&#39;)){
+      _self.addLabel(point.value,point);
+    }
+  },
+  //创建折线
+  _createLine : function(path){
+    var _self = this,
+      lineAttrs = _self.get(&#39;line&#39;),
+      cfg = Util.mix({},lineAttrs);
+    cfg.path = path;
+    lineShape = _self.addShape(&#39;path&#39;,cfg);
+    _self.set(&#39;lineShape&#39;,lineShape);
+    return lineShape;
+  },
+  //绘制触发事件的path
+  drawTracker : function(points){
+    var _self = this,
+      lineAttrs = _self.get(&#39;line&#39;),
+      tolerance = _self.get(&#39;tolerance&#39;),
+      path = _self.points2tracker(points),
+      cfg = Util.mix({},lineAttrs),
+      preWidth = Number(lineAttrs[&#39;stroke-width&#39;]),
+      shape;
+
+    cfg[&#39;stroke-width&#39;] = preWidth + tolerance;
+    cfg[&#39;stroke-opacity&#39;] = 0.001;
+    cfg.path = path;
+    shape = _self.addShape(&#39;path&#39;,cfg);
+    _self.set(&#39;trackerShape&#39;,shape);
+  },
+  //将点转换成Path
+  points2path : function(points){
+    if(!points.length){
+      return &#39;&#39;;
+    }
+    var _self = this,
+      smooth = _self.get(&#39;smooth&#39;),
+      connectNulls = _self.get(&#39;connectNulls&#39;),
+      path = &#39;&#39;,
+      preItem,
+      str;
+    if(points.length &lt;= 2){ //少于3个点不能使用smooth
+      smooth = false;
+    }
+
+    Util.each(points,function(item,index){
+      if(item.value == null){
+        if(connectNulls){
+          return;
+        }
+        str = &#39;&#39;;
+      }else{
+        str = (preItem == null || preItem.value == null) ? (smooth ? &#39;M{x} {y} R&#39; : &#39;M{x} {y}&#39;) : (smooth ? &#39; {x} {y}&#39; : &#39;L{x} {y}&#39;);
+        
+      }
+      
+      path += Util.substitute(str,item);
+      
+      preItem = item;
+      
+    });
+    if(_self.isInCircle()){
+      path += &#39;z&#39;;
+    }
+    return path;
+  },
+  //获取tracker的路径，增加触发事件的范围
+  points2tracker : function(points){
+    if(!points.length){
+      return &#39;&#39;;
+    }
+    var _self = this,
+      tolerance = _self.get(&#39;tolerance&#39;),
+      first = points[0],
+      path = &#39;M&#39; + (points[0].x - tolerance) + &#39; &#39; + (points[0].y || 0);
+    Util.each(points,function(item,index){
+      if (item.value != null) {
+        var str = &#39;L{x} {y}&#39;;
+        path += Util.substitute(str,item);
+      }
+    });
+    if(_self.isInCircle()){
+      path += &#39;z&#39;;
+    }
+    return path;
+  },
+<span id='Chart-Series-Line-method-setActiveStatus'>  /**
+</span>   * @protected
+   * 设置图形的激活状态
+   * @param {Boolean} actived 是否激活
+   */
+  setActiveStatus : function(actived){
+    var _self = this,
+      line = _self.get(&#39;line&#39;),
+      lineShape = _self.get(&#39;lineShape&#39;),
+      lineActived = _self.get(&#39;lineActived&#39;);
+    if(actived){
+      lineActived &amp;&amp; lineShape.attr(lineActived);
+      //_self.toFront();
+    }else{
+      line &amp;&amp; lineShape.attr(line);
+      var markersGroup = _self.get(&#39;markersGroup&#39;);
+      markersGroup &amp;&amp; markersGroup.clearActivedItem();
+    }
+  },
+  
+<span id='Chart-Series-Line-method-getSnapMarker'>  /**
+</span>   * 获取逼近的marker
+   * @return {Chart.Canvas.Shape} 逼近的marker
+   */
+  getSnapMarker : function(point){
+    var _self = this,
+      markersGroup = _self.get(&#39;markersGroup&#39;),
+      rst = null;
+    if(markersGroup){
+      if(_self.isInCircle()){
+        var info = _self.getTrackingInfo(point);
+        rst = markersGroup.getSnapMarker(info);
+      }else{
+        rst = markersGroup.getSnapMarker(point.x);
+      }
+    }
+    return rst;
+  }
+});
+
+module.exports = Line;
+</pre>
+</body>
+</html>

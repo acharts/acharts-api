@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Util'>/**
+</span> * @fileOverview 坐标系内部区域,用于显示背景
+ * @ignore
+ */
+
+
+var Util = require(&#39;../util&#39;),
+	PlotItem = require(&#39;./plotitem&#39;),
+	PlotRange = require(&#39;./plotrange&#39;);
+
+<span id='Chart-PlotBack'>/**
+</span> * @class Chart.PlotBack
+ * @protected
+ * 决定图表的边框、背景
+ * @extends Chart.PlotItem
+ */
+var PlotBack = function(cfg){
+	PlotBack.superclass.constructor.call(this,cfg);
+};
+
+PlotBack.ATTRS = {
+
+	elCls : &#39;x-chart-back&#39;,
+	zIndex : 0,
+<span id='Chart-PlotBack-property-margin'>	/**
+</span>	 * 边距，来决定绘图范围,如果是一个值那么4个边框都是统一的数字，如果是一个数组，则4个边框分别对应值
+	 * @type {Array|Number}
+	 */
+	margin : 20,
+<span id='Chart-PlotBack-property-plotRange'>	/**
+</span>	 * 绘图的范围
+	 * @type {Object}
+	 */
+	plotRange : null,
+<span id='Chart-PlotBack-property-background'>	/**
+</span>	 * 背景
+	 * @type {Object}
+	 */
+	background : null,
+<span id='Chart-PlotBack-property-border'>	/**
+</span>	 * 最外层边框的配置项
+	 * @type {Object}
+	 */
+	border : null
+};
+
+Util.extend(PlotBack,PlotItem);
+
+Util.augment(PlotBack,{
+
+	beforeRenderUI : function(){
+		PlotBack.superclass.beforeRenderUI.call(this);
+		this._calculateRange();
+	},
+
+	renderUI : function(){
+		PlotBack.superclass.renderUI.call(this);
+		this._renderBorder();
+		this._renderBackground();
+	},
+	//渲染边框
+	_renderBorder : function(){
+		var _self = this,
+			border = _self.get(&#39;border&#39;),
+			canvas = _self.get(&#39;canvas&#39;),
+			cfg;
+
+		if(border){
+			cfg = Util.mix({
+				width : canvas.get(&#39;width&#39;),
+				height : canvas.get(&#39;height&#39;)
+			},border);
+
+			this.addShape(&#39;rect&#39;,cfg);
+		}
+	},
+	//渲染背景
+	_renderBackground : function(){
+		var _self = this,
+			background = _self.get(&#39;background&#39;),
+			plotRange = _self.get(&#39;plotRange&#39;),
+			width,
+			height,
+			tl,
+			cfg;
+
+		if(background){
+
+			width = plotRange.getWidth();
+			height = plotRange.getHeight();
+			tl = plotRange.tl;
+			cfg = {
+				x : tl.x,
+				y : tl.y,
+				width : width,
+				height :height
+			};
+			//图片
+			if(background.image){
+
+				cfg.src = background.image;
+
+				_self.addShape(&#39;image&#39;,cfg);
+
+			}else{//矩形
+				Util.mix(cfg,background);
+
+				_self.addShape(&#39;rect&#39;,cfg);
+			}
+		}
+	},
+	//计算，设置绘图区域
+	_calculateRange : function(){
+
+		var _self = this,
+			margin = _self.get(&#39;margin&#39;),
+			canvas = _self.get(&#39;canvas&#39;),
+			width = canvas.get(&#39;width&#39;),
+			height = canvas.get(&#39;height&#39;),
+			plotRange,
+			top = 0, //上方的边距
+			left = 0, //左边 边距
+			right = 0,
+			bottom = 0,
+			start, //坐标系开始的节点，从左下，到右上
+			end; //结束的节点
+
+		if(Util.isNumber(margin)){
+			top = left = right = bottom = margin;
+		}
+		if(Util.isArray(margin)){
+			top = margin[0];
+			right = margin[1] != null ? margin[1] : margin[0];
+			bottom = margin[2] != null ? margin[2] : margin[0];
+			left = margin[3] != null ? margin[3] : right;
+		}
+
+		start = canvas.getRelativePoint(left,height - bottom);
+		end = canvas.getRelativePoint(width - right,top);
+
+		plotRange = new PlotRange(start,end);
+		_self.set(&#39;plotRange&#39;,plotRange);
+
+	}
+});
+
+
+module.exports = PlotBack;
+</pre>
+</body>
+</html>

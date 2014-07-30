@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Util'>/**
+</span> * @fileOverview 子元素可以被激活
+ * @ignore
+ */
+
+var Util = require(&#39;../../util&#39;);
+<span id='Chart-ActivedGroup'>/**
+</span> * @class Chart.ActivedGroup
+ * @protected
+ * 元素可以激活的容器扩展
+ */
+var Group = function(){
+
+};
+
+Group.ATTRS = {
+	
+};
+
+Util.augment(Group,{
+
+<span id='Chart-ActivedGroup-method-isItemActived'>	/**
+</span>	 * @protected
+	 * 是否激活
+	 * @param {Chart.Actived} item 可以被激活的元素
+	 * @return {Chart.Actived[]} 可以被激活的元素集合
+	 */
+	isItemActived : function(item){
+		return item.isActived();
+	},
+<span id='Chart-ActivedGroup-method-getActiveItems'>	/**
+</span>	 * @protected
+	 * 获取可以被激活的元素
+	 * @return {Chart.Actived[]} 可以被激活的元素集合
+	 */
+	getActiveItems : function(){
+		return this.get(&#39;children&#39;);
+	},
+<span id='Chart-ActivedGroup-method-setItemActived'>	/**
+</span>	 * @protected
+	 * 设置激活状态
+	 * @param {Chart.Actived} item 可以被激活的元素
+	 * @param {Boolean} actived 是否激活
+	 */
+	setItemActived : function(item,actived){
+		if(actived){
+			item.setActived();
+		}else{
+			item.clearActived();
+		}
+	},
+	
+<span id='Chart-ActivedGroup-method-onActived'>	/**
+</span>	 * @protected
+	 * 触发激活事件
+	 * @param  {Object} item 可激活的子项
+	 */
+	onActived : function(item){
+		this.fireUpGroup(&#39;actived&#39;,item);
+	},
+<span id='Chart-ActivedGroup-method-onUnActived'>	/**
+</span>	 * @protected
+	 * 触发取消激活事件
+	 * @param  {Object} item 可激活的子项
+	 */
+	onUnActived : function(item){
+		this.fireUpGroup(&#39;unactived&#39;,item);
+	},
+<span id='Chart-ActivedGroup-method-setActivedItem'>	/**
+</span>	 * 设置激活的元素
+	 * @param {Chart.Actived} item 可以被激活的元素
+	 */
+	setActivedItem : function(item){
+		var _self = this;
+
+		_self.clearActivedItem();
+		if(item &amp;&amp; !_self.isItemActived(item)){
+			_self.setItemActived(item,true);
+			_self.onActived();
+		}
+		
+	},
+<span id='Chart-ActivedGroup-method-getActived'>	/**
+</span>	 * 获取激活的元素
+	 * @return {Chart.Actived} 激活的元素
+	 */
+	getActived : function(){
+		var _self = this,
+			items = _self.getActiveItems(),
+			rst = null;
+
+		Util.each(items,function(item){
+			if(_self.isItemActived(item)){
+				rst = item;
+				return false;
+			}
+		});
+
+		return rst;
+	},
+<span id='Chart-ActivedGroup-method-clearActivedItem'>	/**
+</span>	 * 清除激活的元素
+	 */
+	clearActivedItem : function(item){
+		var _self = this;
+		item = item || _self.getActived();
+		if(item){
+			_self.setItemActived(item,false);
+			_self.onUnActived(item);
+		}
+			 
+	}
+
+});
+
+module.exports = Group;
+</pre>
+</body>
+</html>

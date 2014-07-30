@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Item'>/**
+</span> * @fileOverview 图表中的文本信息
+ * @ignore
+ */
+
+
+var 
+	Item = require(&#39;./plotitem&#39;),
+	Util = require(&#39;../util&#39;),
+	CLS_LABELS = &#39;x-chart-labels&#39;;
+
+<span id='Chart-Labels'>/**
+</span> * @class Chart.Labels
+ * 文本集合
+ * @extends Chart.PlotItem
+ */
+var Labels = function(cfg){
+	Labels.superclass.constructor.call(this,cfg);
+};
+
+Labels.ATTRS = {
+
+	elCls : CLS_LABELS,
+
+	zIndex : 6,
+<span id='Chart-Labels-property-items'>	/**
+</span>	 * 文本集合
+	 * @type {Array}
+	 */
+	items : null,
+<span id='Chart-Labels-property-label'>	/**
+</span>	 * 内部label的默认配置信息
+	 * @type {Object}
+	 */
+	label : null,
+<span id='Chart-Labels-property-renderer'>	/**
+</span>	 * 格式化函数 function (text,item)
+	 * @type {Function}
+	 */
+	renderer : null,
+
+	animate : true,
+	
+	duration : 400
+
+};
+
+Util.extend(Labels,Item);
+
+Util.augment(Labels,{
+	
+	//渲染控件
+	renderUI : function(){
+		var _self = this;
+		Labels.superclass.renderUI.call(_self);
+		_self._drawLabels();
+	},
+<span id='Chart-Labels-method-addLabel'>	/**
+</span>	 * 添加文本
+	 * @param {Object} item 文本配置项
+	 */
+	addLabel : function(item){
+		var _self = this,
+			items = _self.get(&#39;items&#39;),
+			count = items.length;
+		items.push(item);
+
+		return _self._addLabel(item,count);
+
+	},
+<span id='Chart-Labels-method-setItems'>	/**
+</span>	 * 设置文本
+	 * @param {Array} items 文本集合
+	 */
+	setItems : function(items){
+		var _self = this;
+
+		_self.clear();
+		_self.set(&#39;items&#39;,items);
+		_self._drawLabels();
+	},
+	//绘制文本
+	_drawLabels : function(){
+		var _self = this,
+			items = _self.get(&#39;items&#39;),
+			cfg;
+
+		Util.each(items,function(item,index){
+			_self._addLabel(item,index);
+		});
+	},
+
+	_addLabel : function(item,index){
+		var _self = this,
+			cfg = _self._getLabelCfg(item,index);
+
+		return _self._createText(cfg);
+	},
+	_getLabelCfg : function(item,index){
+		var _self = this,
+			label = _self.get(&#39;label&#39;),
+			renderer = _self.get(&#39;renderer&#39;);
+
+		if(!Util.isObject(item)){
+			var tmp = item;
+			item = {};
+			item.text = tmp;
+		}
+
+		if(renderer){
+			item.text = renderer(item.text,item,index);
+		}
+		if(item.text == null){
+			item.text = &#39;&#39;;
+		}
+		
+		item.text = item.text.toString();
+		item.x = (item.x || 0) + (label.x || 0);
+		item.y = (item.y || 0) + (label.y || 0);
+		cfg = Util.mix({},label,item);
+
+		return cfg;
+	},
+	changeLabel : function(label,item){
+		var _self = this,
+			index = Util.indexOf(_self.get(&#39;children&#39;),label),
+			cfg = _self._getLabelCfg(item,index);
+		if(label){
+			label.attr(&#39;text&#39;,cfg.text);
+			if(label.attr(&#39;x&#39;) != cfg.x || label.attr(&#39;y&#39;) != cfg.y){
+				if(Util.svg &amp;&amp; _self.get(&#39;animate&#39;) &amp;&amp; !cfg.rotate){
+					if(cfg.rotate){
+						label.attr(&#39;transform&#39;,&#39;&#39;);
+					}
+					
+					label.animate({
+						x : cfg.x,
+						y : cfg.y
+					},_self.get(&#39;duration&#39;));
+				}else{
+					label.attr(cfg);
+					if(cfg.rotate){
+						label.attr(&#39;transform&#39;,Util.substitute(&#39;r{rotate} {x} {y}&#39;,cfg));
+					}
+				}
+			}
+			
+		}
+	},
+<span id='Chart-Labels-method-_createText'>	/**
+</span>	 * 创建按文本
+	 * @private
+	 */
+	_createText : function(cfg){
+		return this.addShape(&#39;label&#39;,cfg);
+	}
+
+});
+
+
+module.exports = Labels;
+</pre>
+</body>
+</html>

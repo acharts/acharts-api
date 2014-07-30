@@ -1,0 +1,10 @@
+{
+"--output":"../../api",
+"--title":"BUI API",
+"--external":"window,HTMLDocument,HTMLElement,DocumentFragment,XMLHttpRequest,jQuery",
+"--":[
+	//"../../../bui/src/common/util.js",
+        "../../../acharts/src",
+	
+    ]
+}

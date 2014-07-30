@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Util'>/**
+</span> * @fileOverview 时间坐标轴
+ * @ignore
+ */
+
+
+var Util = require(&#39;../../util&#39;),
+  NAixs = require(&#39;./number&#39;);
+
+function parseTime(d){
+  if(d instanceof Date){
+    return d.getTime();
+  }
+  if(Util.isNumber(d)){
+    return d;
+  }
+  var date = d;
+  if(Util.isString(d)){
+    date = d.replace(&#39;-&#39;,&#39;\/&#39;);
+    date = new Date(date).getTime();
+  }
+  return date;
+}
+
+<span id='Chart-Axis-Time'>/**
+</span> * @class Chart.Axis.Time
+ * 时间坐标轴
+ */
+var Time = function(cfg){
+  Time.superclass.constructor.call(this,cfg)
+};
+
+Time.ATTRS = {
+
+<span id='Chart-Axis-Time-property-startDate'>  /**
+</span>   * 开始日期时间
+   * @type {Date}
+   */
+  startDate : null,
+
+  dateFormat : null,
+<span id='Chart-Axis-Time-property-endDate'>  /**
+</span>   * 结束日期时间
+   * @type {Date}
+   */
+  endDate : null
+};
+
+Util.extend(Time,NAixs);
+
+Util.augment(Time,{
+  //渲染控件前
+  beforeRenderUI : function(){
+    var _self = this;
+    
+    
+    var startTime = parseTime(_self.get(&#39;startDate&#39;)),
+      endTime = parseTime(_self.get(&#39;endDate&#39;));
+    if(startTime &amp;&amp; !_self.get(&#39;min&#39;)){
+      _self.set(&#39;min&#39;,startTime);
+    }
+    if(endTime &amp;&amp; !_self.get(&#39;max&#39;)){
+      _self.set(&#39;max&#39;,endTime);
+    }
+
+    Time.superclass.beforeRenderUI.call(_self);
+
+  }
+});
+
+module.exports = Time;
+</pre>
+</body>
+</html>
