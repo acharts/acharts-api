@@ -23,13 +23,19 @@
 
 var 
 	PlotItem = require(&#39;./plotitem&#39;),
-	Util = require(&#39;../util&#39;);
+	Util = require(&#39;../util&#39;),
+	CLS_TITLE = &#39;ac-title&#39;,
+	CLS_LIST = &#39;ac-list&#39;;
 
 function min(x,y){
 	return x &gt; y ? y : x;
 }
 function max(x,y){
 	return x &gt; y ? x : y;
+}
+
+function find(dom,cls){
+	return dom.getElementsByClassName(cls)[0];
 }
 
 
@@ -45,6 +51,8 @@ var Tooltip = function(cfg){
 Tooltip.ATTRS = {
 	zIndex : 10,
 	elCls : &#39;x-chart-tootip&#39;,
+
+	itemName : &#39;tootip&#39;,
 <span id='Chart-Tooltip-property-crosshairs'>	/**
 </span>	 * 是否贯穿整个坐标轴
 	 * @type {Boolean}
@@ -65,7 +73,6 @@ Tooltip.ATTRS = {
 	 * @type {Number}
 	 */
 	offset : 0,
-	shadow : null,
 <span id='Chart-Tooltip-property-title'>	/**
 </span>	 * 标题的配置信息
 	 * @type {Object}
@@ -118,6 +125,24 @@ Tooltip.ATTRS = {
 	valueSuffix : &#39;&#39;,
 	
 	visible : false,
+
+<span id='Chart-Tooltip-property-custom'>	/**
+</span>	 * 是否自定义tooltip，此时不使用svg,使用一个absolute的div
+	 * @type {Boolean}
+	 */
+	custom : false,
+
+<span id='Chart-Tooltip-property-customFollow'>	/**
+</span>	 * 自定义的tooltip是否跟随显示隐藏、移动
+	 * @type {Boolean}
+	 */
+	customFollow : true,
+
+	html : &#39;&lt;div class=&quot;ac-tooltip&quot; style=&quot;position:absolute;visibility: hidden;&quot;&gt;&lt;h4 class=&quot;&#39; + CLS_TITLE + &#39;&quot;&gt;&lt;/h4&gt;&lt;ul class=&quot;&#39; + CLS_LIST + &#39;&quot;&gt;&lt;/ul&gt;&lt;/div&gt;&#39;,
+	
+	formatter : function(item,index){
+		return Util.substitute(&#39;&lt;li&gt;&lt;span style=&quot;color:{color}&quot;&gt;{name}&lt;/span&gt; : {value}&lt;/li&gt;&#39;,item);
+	},
 	items : [
 
 	],
@@ -132,12 +157,17 @@ Util.extend(Tooltip,PlotItem);
 Util.augment(Tooltip,{
 
 	renderUI : function(){
-		var _self = this;
+		var _self = this,
+			custom = _self.get(&#39;custom&#39;);
 
 		Tooltip.superclass.renderUI.call(_self);
-		_self._renderBorer();
-		_self._renderText();
-		_self._renderItemGroup();
+		if(!custom){
+			_self._renderBorer();
+			_self._renderText();
+			_self._renderItemGroup();
+		}else{
+			_self._renderCustom();
+		}
 		_self._renderCrossLine();
 
 	},
@@ -155,6 +185,23 @@ Util.augment(Tooltip,{
 
 		_self.setTitle(title.text);
 
+	},
+	_renderCustom : function(){
+		var _self = this,
+			html = _self.get(&#39;html&#39;),
+			outterNode = _self.get(&#39;canvas&#39;).get(&#39;node&#39;).parentNode,
+			customDiv
+		if(/^\#/.test(html)){
+			var id = html.replace(&#39;#&#39;,&#39;&#39;);
+			customDiv = document.getElementById(id);
+		}else{
+			customDiv = Util.createDom(html);
+		}
+		if(_self.get(&#39;customFollow&#39;)){
+			outterNode.appendChild(customDiv);
+			outterNode.style.position = &#39;relative&#39;;
+		}
+		_self.set(&#39;customDiv&#39;,customDiv);
 	},
 	//渲染文本集合
 	_renderItemGroup : function(){
@@ -200,9 +247,22 @@ Util.augment(Tooltip,{
 	 */
 	setTitle : function(text){
 		var _self = this,
-			titleShape = _self.get(&#39;titleShape&#39;),
+			titleShape,
 			title = _self.get(&#39;title&#39;),
+			custom = _self.get(&#39;custom&#39;),
 			cfg;
+
+		_self.set(&#39;titleText&#39;,text);
+		if(custom){
+			var customDiv = _self.get(&#39;customDiv&#39;),
+				titleDom = find(customDiv,CLS_TITLE);
+			if(titleDom){
+				titleDom.innerHTML = text;
+			}
+			return;
+		}
+
+		titleShape = _self.get(&#39;titleShape&#39;);
 		if(!titleShape){
 			title.text = text || &#39;&#39;;
 			titleShape = _self.addShape(&#39;text&#39;,title);
@@ -210,13 +270,14 @@ Util.augment(Tooltip,{
 		}
 		titleShape.attr(&#39;text&#39;,text);
 	},
-
 	getInnerBox : function(){
 		var _self = this,
-			textGroup = _self.get(&#39;textGroup&#39;),
+			rst = {};
+		
+		var	textGroup = _self.get(&#39;textGroup&#39;),
 			titleShape = _self.get(&#39;titleShape&#39;),
 			bbx = textGroup.getBBox(),
-			rst = {},
+			
 			width = bbx.width;
 		if(titleShape){
 			var tbox = titleShape.getBBox();
@@ -224,7 +285,7 @@ Util.augment(Tooltip,{
 		}
 		rst.width = bbx.x + width + 8;
 		rst.height = bbx.height + bbx.y + 10;
-
+		
 		return rst;
 	},
 <span id='Chart-Tooltip-method-setColor'>	/**
@@ -233,8 +294,12 @@ Util.augment(Tooltip,{
 	 */
 	setColor : function(color){
 		var _self = this,
-			borderShape = _self.get(&#39;borderShape&#39;);
-		borderShape.attr(&#39;stroke&#39;,color);
+			borderShape = _self.get(&#39;borderShape&#39;),
+			customDiv = _self.get(&#39;customDiv&#39;);
+		borderShape &amp;&amp; borderShape.attr(&#39;stroke&#39;,color);
+		if(customDiv){
+			customDiv.style.borderColor = color;
+		} 
 	},
 <span id='Chart-Tooltip-method-show'>	/**
 </span>	 * 显示
@@ -242,11 +307,17 @@ Util.augment(Tooltip,{
 	show : function(){
 		var _self = this,
 			crossShape = _self.get(&#39;crossShape&#39;),
+			customDiv = _self.get(&#39;customDiv&#39;),
 			hideHandler = _self.get(&#39;hideHandler&#39;);
 		if(hideHandler){
 			clearTimeout(hideHandler);
 		}
+		
 		Tooltip.superclass.show.call(_self);
+		if(customDiv &amp;&amp; _self.get(&#39;customFollow&#39;)){
+			customDiv.style.visibility = &#39;visible&#39;;
+		}
+		_self.fireUp(&#39;tooltipshow&#39;,_self.getEventObj());
 		crossShape &amp;&amp; crossShape.show();
 	},
 <span id='Chart-Tooltip-method-hide'>	/**
@@ -254,9 +325,14 @@ Util.augment(Tooltip,{
 	 */
 	hide : function(){
 		var _self = this,
+			customDiv = _self.get(&#39;customDiv&#39;),
 			crossShape = _self.get(&#39;crossShape&#39;);
 
 		var hideHandler = setTimeout(function(){
+			_self.fireUp(&#39;tooltiphide&#39;,_self.getEventObj());
+			if(customDiv &amp;&amp; _self.get(&#39;customFollow&#39;)){
+				customDiv.style.visibility = &#39;hidden&#39;;
+			}
 			Tooltip.superclass.hide.call(_self);
 			_self.set(&#39;hideHandler&#39;,null);
 		},_self.get(&#39;duration&#39;));
@@ -280,6 +356,7 @@ Util.augment(Tooltip,{
 			offset = _self.get(&#39;offset&#39;),
 			crossShape = _self.get(&#39;crossShape&#39;),
 			bbox = _self.getBBox(),
+			customDiv = _self.get(&#39;customDiv&#39;),
 			after = true,
 			animate = _self.get(&#39;animate&#39;); //移动点落到tooltip的后面
 
@@ -288,7 +365,9 @@ Util.augment(Tooltip,{
 
 		x = x - bbox.width - offset;
 		y = y - bbox.height;
-
+		if(customDiv &amp;&amp; _self.get(&#39;customFollow&#39;)){
+			x = x - Util.getOuterWidth(customDiv);
+		}
 		if(plotRange){
 
 			if(!plotRange.isInRange(x,y)){
@@ -313,6 +392,7 @@ Util.augment(Tooltip,{
 			}
 
 			_self.move(x,y);/**/
+			_self.moveCustom(x,y);
 
 			if(crossShape){
 				if(after){
@@ -322,8 +402,6 @@ Util.augment(Tooltip,{
 				}
 			}
 		}
-
-
 	},
 	//重置边框大小
 	resetBorder : function(){
@@ -331,11 +409,32 @@ Util.augment(Tooltip,{
 			bbox = _self.getInnerBox(),
 			borderShape = _self.get(&#39;borderShape&#39;);
 
-
 		borderShape.attr({
 			width : bbox.width,
 			height : bbox.height
 		});
+	},
+	moveCustom : function(x,y){
+		var _self = this,
+			customDiv = _self.get(&#39;customDiv&#39;);
+		if(customDiv &amp;&amp; _self.get(&#39;customFollow&#39;)){
+			var 
+				pTop = parseFloat(Util.getStyle(customDiv,&#39;paddingTop&#39;)),
+				bTop = parseFloat(Util.getStyle(customDiv,&#39;borderTopWidth&#39;)) || 0,
+				pLeft = parseFloat(Util.getStyle(customDiv,&#39;paddingLeft&#39;)),
+				bLeft = parseFloat(Util.getStyle(customDiv,&#39;borderLeftWidth&#39;)) || 0;
+			customDiv.style.left = (x - bLeft - pLeft ) + &#39;px&#39;;
+			customDiv.style.top = (y - bTop - pTop) + &#39;px&#39;;
+		}
+	},
+	//添加自定义项
+	addCustomItem : function(item,index){
+		var _self = this,
+			customDiv = _self.get(&#39;customDiv&#39;),
+			listDom = find(customDiv,CLS_LIST),
+			formatter = _self.get(&#39;formatter&#39;),
+			str = formatter(item,index);
+		listDom.appendChild(Util.createDom(str));
 	},
 <span id='Chart-Tooltip-method-addItem'>	/**
 </span>	 * @private
@@ -384,8 +483,6 @@ Util.augment(Tooltip,{
 			},params);
 		  return group.addShape(&#39;text&#39;,cfg);
 	  }
-
-
 	},
 <span id='Chart-Tooltip-method-setItems'>	/**
 </span>	 * 设置显示的信息项
@@ -397,33 +494,63 @@ Util.augment(Tooltip,{
 	 * @param {Array} items 信息列表
 	 */
 	setItems : function(items){
+		var _self = this,
+			custom = _self.get(&#39;custom&#39;);
+
+			_self.clearItems();
+			Util.each(items,function(item,index){
+				if(custom){
+					_self.addCustomItem(item,index);
+				}else{
+					_self.addItem(item,index);
+				}
+			});
+			if(items[0]){
+				_self.setColor(items[0].color);
+			}
+			if(!custom){
+				_self.resetBorder();
+			}
+			if(_self.get(&#39;items&#39;) != items){
+				_self.set(&#39;items&#39;,items);
+				_self.onChange();
+			}
+	},
+
+	onChange : function(){
+		this.fireUp(&#39;tooltipchange&#39;,this.getEventObj());
+	},
+	getEventObj :function(){
 		var _self = this;
-
-		_self.clearItems();
-		Util.each(items,function(item,index){
-			_self.addItem(item,index);
-		});
-
-		if(items[0]){
-			_self.setColor(items[0].color);
-		}
-		_self.resetBorder();
-		//_self.set(&#39;items&#39;,items);
+		return {
+			title : _self.get(&#39;titleText&#39;),
+			items : _self.get(&#39;items&#39;),
+			dom : _self.get(&#39;customDiv&#39;),
+			tooltip : _self
+		};
 	},
 <span id='Chart-Tooltip-method-clearItems'>	/**
 </span>	 * 清除所有的信息
 	 */
 	clearItems : function(){
 		var _self = this,
-			group = _self.get(&#39;textGroup&#39;);
-		group.clear();
+			group = _self.get(&#39;textGroup&#39;),
+			customDiv = _self.get(&#39;customDiv&#39;);
+		group &amp;&amp; group.clear();
+		if(customDiv){
+			var listDom = find(customDiv,CLS_LIST);
+			listDom.innerHTML = &#39;&#39;;
+		}
 	},
 	remove : function(){
-
 		var _self = this,
-			crossShape = _self.get(&#39;crossShape&#39;);
+			crossShape = _self.get(&#39;crossShape&#39;),
+			customDiv = _self.get(&#39;customDiv&#39;);
 		crossShape &amp;&amp; crossShape.remove();
 		Tooltip.superclass.remove(this);
+		if(customDiv){
+			customDiv.parentNode.removeChild(customDiv);
+		}
 	}
 
 });

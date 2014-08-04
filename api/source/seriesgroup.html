@@ -143,11 +143,13 @@ Util.augment(Group,{
     var _self = this;
     Group.superclass.bindUI.call(_self);
     _self.bindCanvasEvent();
+    _self.bindChartEvent();
   },
   //绑定鼠标在画板上移动事件
   bindCanvasEvent : function(){
     var _self = this,
-      triggerEvent = _self.get(&#39;tipGroup&#39;).get(&#39;triggerEvent&#39;),
+      tipGroup = _self.get(&#39;tipGroup&#39;),
+      triggerEvent = tipGroup ? tipGroup.get(&#39;triggerEvent&#39;) : &#39;&#39;,
       canvas = _self.get(&#39;canvas&#39;);
 
     if (triggerEvent == &#39;click&#39;) {
@@ -170,6 +172,47 @@ Util.augment(Group,{
       canvas.on(&#39;mouseout&#39;,Util.wrapBehavior(_self,&#39;onMouseOut&#39;));
     }
   },
+  //绑定图表事件
+  bindChartEvent : function(){
+    var _self = this,
+      canvas = _self.get(&#39;canvas&#39;);
+
+    function fireChartEvent(name,ev){
+      var point = canvas.getPoint(ev.clientX,ev.clientY),
+        info = _self.getPointInfo(point,ev);
+      _self.fireUp(name,info);
+    }
+
+    canvas.on(&#39;click&#39;,function(ev){
+      var point = canvas.getPoint(ev.clientX,ev.clientY);
+      if(_self._isInAxis(point)){
+        var info = _self.getPointInfo(point,ev);
+        _self.fireUp(&#39;plotclick&#39;,info);
+      }
+    });
+
+    canvas.on(&#39;mousemove&#39;,function(ev){
+      var point = canvas.getPoint(ev.clientX,ev.clientY),
+        isOver = _self.get(&#39;isOver&#39;);
+      if(_self._isInAxis(point)){
+        var info = _self.getPointInfo(point,ev);
+        _self.fireUp(&#39;plotmove&#39;,info);
+        if(!isOver){
+          _self.fireUp(&#39;plotover&#39;);
+          _self.set(&#39;isOver&#39;,true);
+        }
+      }else if(isOver){
+        _self.fireUp(&#39;plotout&#39;);
+        _self.set(&#39;isOver&#39;,false);
+      }
+    });
+  },
+  //获取图标上对应位置的信息，待扩充
+  getPointInfo : function(point,ev){
+    var _self = this,
+      shape = ev.target.shape;
+    return Util.mix({shape : shape},point);
+  },
   //处理鼠标在画板上移动
   onCanvasMove : function(ev){
     var _self = this,
@@ -181,7 +224,7 @@ Util.augment(Group,{
     if(!tipGroup){
       return;
     }
-    point = canvas.getPoint(ev.pageX,ev.pageY);
+    point = canvas.getPoint(ev.clientX,ev.clientY);
     if(_self._isInAxis(point)){
       _self._processTracking(point,tipGroup);
     }else{

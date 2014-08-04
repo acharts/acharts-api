@@ -56,6 +56,12 @@ Labels.ATTRS = {
 	 */
 	renderer : null,
 
+	custom : false,
+
+	html : &#39;&lt;div class=&quot;ac-labels&quot; style=&quot;position:absolute;top:0;left:0;&quot;&gt;&lt;/div&gt;&#39;,
+
+	itemTpl : &#39;&lt;div clss=&quot;ac-label&quot; style=&quot;position:absolute;&quot;&gt;{text}&lt;/div&gt;&#39;,
+
 	animate : true,
 	
 	duration : 400
@@ -81,9 +87,7 @@ Util.augment(Labels,{
 			items = _self.get(&#39;items&#39;),
 			count = items.length;
 		items.push(item);
-
 		return _self._addLabel(item,count);
-
 	},
 <span id='Chart-Labels-method-setItems'>	/**
 </span>	 * 设置文本
@@ -95,6 +99,15 @@ Util.augment(Labels,{
 		_self.clear();
 		_self.set(&#39;items&#39;,items);
 		_self._drawLabels();
+	},
+	clear : function(){
+		var _self = this,
+			customDiv = _self.get(&#39;customDiv&#39;);
+		if(customDiv){
+			customDiv.innerHTML = &#39;&#39;;
+		}
+
+		Labels.superclass.clear.call(_self);
 	},
 	//绘制文本
 	_drawLabels : function(){
@@ -138,38 +151,113 @@ Util.augment(Labels,{
 
 		return cfg;
 	},
+<span id='Chart-Labels-method-getLabels'>	/**
+</span>	 * 获取内部labels
+	 * @return {Array} 内部的label集合
+	 */
+	getLabels : function(){
+		var _self = this,
+			customDiv = _self.get(&#39;customDiv&#39;);
+		if(customDiv){
+			return Util.makArray(customDiv.childNodes);
+		}else{
+			return _self.get(&#39;children&#39;);
+		}
+	},
+	//更改label
 	changeLabel : function(label,item){
 		var _self = this,
-			index = Util.indexOf(_self.get(&#39;children&#39;),label),
-			cfg = _self._getLabelCfg(item,index);
+			custom = _self.get(&#39;custom&#39;),
+			index,
+			cfg;
+
+			index = Util.indexOf(_self.get(&#39;children&#39;),label);
+		cfg = _self._getLabelCfg(item,index);
 		if(label){
-			label.attr(&#39;text&#39;,cfg.text);
-			if(label.attr(&#39;x&#39;) != cfg.x || label.attr(&#39;y&#39;) != cfg.y){
-				if(Util.svg &amp;&amp; _self.get(&#39;animate&#39;) &amp;&amp; !cfg.rotate){
-					if(cfg.rotate){
-						label.attr(&#39;transform&#39;,&#39;&#39;);
-					}
-					
-					label.animate({
-						x : cfg.x,
-						y : cfg.y
-					},_self.get(&#39;duration&#39;));
-				}else{
-					label.attr(cfg);
-					if(cfg.rotate){
-						label.attr(&#39;transform&#39;,Util.substitute(&#39;r{rotate} {x} {y}&#39;,cfg));
+			if(custom){
+				var node = _self._createDom(cfg);
+				label.innerHTML = node.innerHTML;
+				_self._setCustomPosition(cfg,label);
+			}else{
+				label.attr(&#39;text&#39;,cfg.text);
+				if(label.attr(&#39;x&#39;) != cfg.x || label.attr(&#39;y&#39;) != cfg.y){
+					if(Util.svg &amp;&amp; _self.get(&#39;animate&#39;) &amp;&amp; !cfg.rotate){
+						if(cfg.rotate){
+							label.attr(&#39;transform&#39;,&#39;&#39;);
+						}
+						
+						label.animate({
+							x : cfg.x,
+							y : cfg.y
+						},_self.get(&#39;duration&#39;));
+					}else{
+						label.attr(cfg);
+						if(cfg.rotate){
+							label.attr(&#39;transform&#39;,Util.substitute(&#39;r{rotate} {x} {y}&#39;,cfg));
+						}
 					}
 				}
 			}
 			
 		}
 	},
+	//设置自定义label的位置
+	_setCustomPosition : function(cfg,labelDom){
+		var _self = this,
+			anchor = cfg[&#39;text-anchor&#39;] || &#39;middle&#39;,
+			top = cfg.y,
+			left = cfg.x,
+			width = Util.getWidth(labelDom),
+			height = Util.getHeight(labelDom);
+
+		top = top - height/2;
+		if(anchor == &#39;middle&#39;){
+			left = left - width/2;
+		}else if(anchor == &#39;end&#39;){
+			left = left - width;
+		}
+		labelDom.style.top = parseInt(top) + &#39;px&#39;;
+		labelDom.style.left = parseInt(left) + &#39;px&#39;;
+	},
 <span id='Chart-Labels-method-_createText'>	/**
 </span>	 * 创建按文本
 	 * @private
 	 */
 	_createText : function(cfg){
-		return this.addShape(&#39;label&#39;,cfg);
+		var _self = this,
+			custom = _self.get(&#39;custom&#39;),
+			customDiv = _self.get(&#39;customDiv&#39;);
+		if(custom){
+			if(!customDiv){
+				var tmp = _self.get(&#39;html&#39;),
+					wraper = _self.get(&#39;canvas&#39;).get(&#39;node&#39;).parentNode;
+				customDiv = Util.createDom(tmp);
+				wraper.style.position = &#39;relative&#39;;
+				wraper.appendChild(customDiv);
+				_self.set(&#39;customDiv&#39;,customDiv);
+			}
+			var node = _self._createDom(cfg);
+			customDiv.appendChild(node);
+			_self._setCustomPosition(cfg,node);
+		}else{
+			return this.addShape(&#39;label&#39;,cfg);
+		}
+	},
+	_createDom : function(cfg){
+		var _self = this,
+			itemTpl = _self.get(&#39;itemTpl&#39;),
+			str = Util.substitute(itemTpl,cfg),
+			node = Util.createDom(str);
+		return node;
+	},
+	//覆写删除
+	remove : function(){
+		var _self = this,
+			customDiv = _self.get(&#39;customDiv&#39;);
+		Labels.superclass.remove(this);
+		if(customDiv){
+			customDiv.parentNode.removeChild(customDiv);
+		}
 	}
 
 });

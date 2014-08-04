@@ -26,41 +26,6 @@ var Util = require(&#39;./util&#39;),
   SeriesGroup = require(&#39;./chart/seriesgroup&#39;),
   Theme = require(&#39;./chart/theme&#39;);
 
-function getWidth(el){
-  return parseFloat(getStyle(el,&#39;width&#39;));
-}
-
-function getHeight(el){
-
-  return parseFloat(getStyle(el,&#39;height&#39;));
-}
-
-function getStyle(el,name){
-  if(window.getComputedStyle){
-    return window.getComputedStyle(el,null).style[name];
-  }
-  return el.currentStyle[name];
-}
-
-function mixIf(obj1,obj2){
-  var rst = {},
-    isMerge = false;
-  Util.each(obj1,function(v,k){
-    rst[k] = obj2[k];
-    if(Util.isObject(rst[k])){
-      Util.mix(true,rst[k],obj1[k]);
-    }else{
-      rst[k] = obj1[k];
-    }
-    
-  });
-  if(!isMerge){
-    rst[&#39;lineCfg&#39;] = obj2[&#39;lineCfg&#39;];
-  }
-  return rst;
-
-}
-
 <span id='Chart'>/**
 </span> * @class Chart
  * 图，里面包括坐标轴、图例等图形
@@ -227,6 +192,62 @@ Chart.ATTRS = {
      * @param {Chart.Series} ev.series 数据序列对象
      */
     
+<span id='Chart-event-tooltipchange'>    /**
+</span>     * @event tooltipchange
+     * tooltip信息改变
+     * @param {Object} ev 事件对象
+     * @param {Chart.Series} ev.title tooltip 标题
+     * @param {Chart.Series} ev.items 显示tooltip的项
+     * @param {HTMLElement} ev.dom 自定义tooltip时，tooltip的DOM 节点
+     */
+    
+<span id='Chart-event-tooltipshow'>    /**
+</span>     * @event tooltipshow
+     * tooltip显示
+     * @param {Object} ev 事件对象
+     * @param {Chart.Series} ev.title tooltip 标题
+     * @param {Chart.Series} ev.items 显示tooltip的项
+     * @param {HTMLElement} ev.dom 自定义tooltip时，tooltip的DOM 节点
+     */
+    
+<span id='Chart-event-tooltiphide'>    /**
+</span>     * @event tooltiphide
+     * tooltip隐藏
+     * @param {Object} ev 事件对象
+     * @param {Chart.Series} ev.title tooltip 标题
+     * @param {Chart.Series} ev.items 显示tooltip的项
+     * @param {HTMLElement} ev.dom 自定义tooltip时，tooltip的DOM 节点
+     */
+    
+    
+<span id='Chart-event-plotclick'>    /**
+</span>     * @event plotclick
+     * 点击图表内部
+     * @param {Object} ev 事件对象
+     * @param {Number} x 点击的x的坐标
+     * @param {Number} y 点击的y的坐标
+     * @param {Chart.Canvas.Shape} Shape 点击到的图形
+     */
+    
+<span id='Chart-event-plotmove'>    /**
+</span>     * @event plotmove
+     * 在图表内部移动
+     * @param {Object} ev 事件对象
+     * @param {Number} x 移动到x的坐标
+     * @param {Number} y 移动到y的坐标
+     * @param {Chart.Canvas.Shape} Shape 移动到的图形
+     */
+    
+<span id='Chart-event-plotover'>    /**
+</span>     * @event plotover
+     * 移入图表内部
+     */
+    
+<span id='Chart-event-plotout'>    /**
+</span>     * @event plotout
+     * 移出图表内部
+     */
+    
   }
 
 
@@ -269,20 +290,22 @@ Util.augment(Chart,{
       _self.get(&#39;canvas&#39;).sort();
     }
   },
+  
   //渲染画板
   _renderCanvas : function(){
     var _self = this,
       id = _self.get(&#39;id&#39;) || _self.get(&#39;render&#39;) || &#39;&#39;;
     id = id.replace(&#39;#&#39;,&#39;&#39;);
     var  el = document.getElementById(id),
-      width = _self.get(&#39;width&#39;) || getWidth(el),
-      height = _self.get(&#39;height&#39;) || getHeight(el),
+      width = _self.get(&#39;width&#39;) || Util.getWidth(el),
+      height = _self.get(&#39;height&#39;) || Util.getHeight(el),
       canvas = new Canvas({
         width : width,
         height :height,
         id : id
       });
     canvas.chart = _self;
+    _self.set(&#39;el&#39;,el);
     _self.set(&#39;canvas&#39;,canvas);
   },
   //渲染背景、边框等
@@ -424,13 +447,13 @@ Util.augment(Chart,{
 </span>   * 触发事件
    * @param  {String} eventType 事件类型
    */
-  fire : function(eventType){
+  fire : function(eventType,eventObj){
     var _self = this,
       events = _self.events,
       callbacks = events[eventType];
     if(callbacks){
       Util.each(callbacks,function(m){
-        m();
+        m(eventObj);
       });
     }
   },
