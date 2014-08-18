@@ -116,6 +116,7 @@ Util.augment(Markers,{
 	change : function(items){
 		var _self = this,
 			children = _self.get(&#39;children&#39;),
+			invert = _self.get(&#39;invert&#39;),
 			xCache = [];
 		
 		// 假如是single模式,就不change
@@ -135,7 +136,12 @@ Util.augment(Markers,{
 				}else{
 					marker.attr(item);
 				}
-				xCache.push(item.x);
+				if(invert){
+					xCache.push(item.y);
+				}else{
+					xCache.push(item.x);
+				}
+				
 			}else{
 				_self._addMarker(item);
 			}
@@ -175,10 +181,13 @@ Util.augment(Markers,{
 			xCache = _self.get(&#39;xCache&#39;),
 			marker = _self.get(&#39;marker&#39;),
 			cfg = Util.mix({},marker,item);
-
-		xCache.push(parseInt(item.x));
+		if(_self.get(&#39;invert&#39;)){
+			xCache.push(parseInt(item.y));
+		}else{
+			xCache.push(parseInt(item.x));
+		}
+		
 		return _self.addShape(&#39;marker&#39;,cfg);
-			
 	},
 <span id='Chart-Markers-method-getSnapMarker'>	/**
 </span>	 * 获取逼近的marker
@@ -202,7 +211,9 @@ Util.augment(Markers,{
 				}
 			});
 		}else{
-			var	snap = Util.snapTo(xCache,point,tolerance),
+
+			var	tmp = [].concat(xCache).sort(function(v1,v2){return v1-v2;}),
+				snap = Util.snapTo(tmp,point,tolerance),
 			index = Util.indexOf(xCache,snap);
 			rst =  _self.getChildAt(index);
 		}

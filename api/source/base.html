@@ -122,6 +122,21 @@ Util.augment(Axis,{
         plotRange = _self.get(&#39;plotRange&#39;);
 
         if(plotRange){
+            var info = _self.getRangeInfo();
+            _self.set(&#39;start&#39;,info.start);
+            _self.set(&#39;end&#39;,info.end);
+        }
+        _self.set(&#39;orthoEnd&#39;,_self._getOrthoEnd());
+
+        _self.set(&#39;indexCache&#39;,{});
+        _self.set(&#39;pointCache&#39;,[]);
+
+    },
+    getRangeInfo : function(){
+        var _self = this,
+            plotRange = _self.get(&#39;plotRange&#39;),
+            rst = {};
+        if(plotRange){
             var start = plotRange.start,
                 position = _self.get(&#39;position&#39;),
                 end = {};
@@ -141,13 +156,11 @@ Util.augment(Axis,{
                 end.x = plotRange.end.x;
                 end.y = start.y;
             }
-            _self.set(&#39;start&#39;,start);
-            _self.set(&#39;end&#39;,end);
+
+            rst.start = start;
+            rst.end = end;
         }
-
-        _self.set(&#39;indexCache&#39;,{});
-        _self.set(&#39;pointCache&#39;,[]);
-
+        return rst;
     },
 <span id='Chart-Axis-method-change'>     /**
 </span>     * 改变坐标轴
@@ -155,13 +168,37 @@ Util.augment(Axis,{
     change : function(info){
         var _self = this;
         if(_self.isChange(info.ticks)){
+            _self._resetRange();
             _self._clearTicksInfo();
             _self.changeInfo(info);
             _self._processTicks(null,true);
+            _self._changeLine();
             _self._changeTicks();
             _self._changeGrid();
             _self.resetLabels();
         }
+    },
+    _resetRange : function(){
+        var _self = this,
+            range = _self.getRangeInfo();
+
+        _self.set(&#39;start&#39;,range.start);
+        _self.set(&#39;end&#39;,range.end);
+        _self.set(&#39;orthoEnd&#39;,_self._getOrthoEnd());
+
+    },
+    isRangeChange : function(){
+        var _self = this,
+          info = _self.getRangeInfo(),
+          start = _self.get(&#39;start&#39;),
+          end = _self.get(&#39;end&#39;);
+      if(info.start.x != start.x || info.start.y != start.y || info.end.x != end.x || info.end.y != end.y){
+        return true;
+      }
+      if(_self.get(&#39;orthoEnd&#39;) !== _self._getOrthoEnd()){
+        return true;
+      }
+      return false;
     },
 <span id='Chart-Axis-method-isChange'>    /**
 </span>     * 坐标轴是否将要发生改变
@@ -171,8 +208,8 @@ Util.augment(Axis,{
     isChange : function(ticks){
       var _self = this,
           preTicks = _self.get(&#39;ticks&#39;);
-
-      return  !Util.equalsArray(ticks,preTicks);
+      
+      return _self.isRangeChange() || !Util.equalsArray(ticks,preTicks);
     },
 <span id='Chart-Axis-method-changeInfo'>    /**
 </span>     * @protected
@@ -210,6 +247,17 @@ Util.augment(Axis,{
         _self._drawLines();
         _self._renderTicks();
         _self._renderGrid(); 
+    },
+
+    _changeLine : function(){
+        var _self = this,
+            lineShape = _self.get(&#39;lineShape&#39;),
+            path;
+
+        if(lineShape){
+            path = _self.getLinePath();
+            lineShape.attr(&#39;path&#39;,path);
+        }
     },
 <span id='Chart-Axis-method-isVertical'>    /**
 </span>     * 是否是纵坐标
@@ -296,7 +344,8 @@ Util.augment(Axis,{
     getSnapIndex : function(offset){
         var _self = this,
             pointCache = _self.get(&#39;pointCache&#39;),
-            snap = Util.snapTo(pointCache,offset);;
+            temp = [].concat(pointCache).sort(function(v1,v2){return v1-v2}),
+            snap = Util.snapTo(temp,offset);
         return Util.indexOf(pointCache,snap);
     },
     _appendEndOffset : function(offset){
@@ -401,6 +450,17 @@ Util.augment(Axis,{
         }else{
             return end.x;
         }
+    },
+    _getOrthoEnd : function(){
+        var _self = this,
+            plotRange = _self.get(&#39;plotRange&#39;),
+            rst;
+        if(_self.isVertical()){
+            rst = plotRange.end.x;
+        }else{
+            rst = plotRange.end.y;
+        }
+        return rst;
     },
     //获取中间点的位置
     _getMiddleCoord : function(){

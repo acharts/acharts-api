@@ -34,8 +34,31 @@ function max(x,y){
 	return x &gt; y ? x : y;
 }
 
+function getElementsByClassName(dom,cls){
+	var els = dom.getElementsByTagName(&#39;*&#39;);
+  var ell = els.length;
+  var elements=[];
+  for(var n=0;n&lt;ell;n++){
+    var oCls=els[n].className||&#39;&#39;;
+    if(oCls.indexOf(cls)&lt;0)        
+    	continue;
+    oCls=oCls.split(/\s+/);
+    var oCll=oCls.length;
+    for(var j=0;j&lt;oCll;j++){
+      if(cls==oCls[j]){
+        elements.push(els[n]);
+        break;
+      }
+    }
+  }
+  return elements;
+}
+
 function find(dom,cls){
-	return dom.getElementsByClassName(cls)[0];
+	if(dom.getElementsByClassName){
+		return dom.getElementsByClassName(cls)[0];
+	}
+	return getElementsByClassName(dom,cls)[0];
 }
 
 
@@ -192,7 +215,7 @@ Util.augment(Tooltip,{
 			outterNode = _self.get(&#39;canvas&#39;).get(&#39;node&#39;).parentNode,
 			customDiv
 		if(/^\#/.test(html)){
-			var id = html.replace(&#39;#&#39;,&#39;&#39;);
+			var id = html.replace(&#39;\#&#39;,&#39;&#39;);
 			customDiv = document.getElementById(id);
 		}else{
 			customDiv = Util.createDom(html);
@@ -433,8 +456,9 @@ Util.augment(Tooltip,{
 			customDiv = _self.get(&#39;customDiv&#39;),
 			listDom = find(customDiv,CLS_LIST),
 			formatter = _self.get(&#39;formatter&#39;),
-			str = formatter(item,index);
-		listDom.appendChild(Util.createDom(str));
+			str = formatter(item,index),
+			node = Util.createDom(str);
+		listDom.appendChild(node);
 	},
 <span id='Chart-Tooltip-method-addItem'>	/**
 </span>	 * @private
@@ -539,7 +563,10 @@ Util.augment(Tooltip,{
 		group &amp;&amp; group.clear();
 		if(customDiv){
 			var listDom = find(customDiv,CLS_LIST);
-			listDom.innerHTML = &#39;&#39;;
+			if(listDom){
+				listDom.innerHTML = &#39;&#39;;
+			}
+			
 		}
 	},
 	remove : function(){

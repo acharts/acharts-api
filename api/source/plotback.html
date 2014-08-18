@@ -75,20 +75,36 @@ Util.augment(PlotBack,{
 		this._renderBorder();
 		this._renderBackground();
 	},
+	repaint : function(){
+		this._calculateRange();
+		this._renderBorder();
+		this._renderBackground();
+	},
 	//渲染边框
 	_renderBorder : function(){
 		var _self = this,
 			border = _self.get(&#39;border&#39;),
 			canvas = _self.get(&#39;canvas&#39;),
+			rect = _self.get(&#39;borderShape&#39;),
 			cfg;
 
 		if(border){
-			cfg = Util.mix({
-				width : canvas.get(&#39;width&#39;),
-				height : canvas.get(&#39;height&#39;)
-			},border);
+			var width = canvas.get(&#39;width&#39;),
+					height = canvas.get(&#39;height&#39;);
+			if(!rect){
+				cfg = Util.mix({
+					width : width,
+					height :height
+				},border);
 
-			this.addShape(&#39;rect&#39;,cfg);
+			  rect = this.addShape(&#39;rect&#39;,cfg);
+				this.set(&#39;borderShape&#39;,rect);
+			}else{
+				rect.attr({
+					width : width,
+					height : height
+				});
+			}
 		}
 	},
 	//渲染背景
@@ -96,13 +112,13 @@ Util.augment(PlotBack,{
 		var _self = this,
 			background = _self.get(&#39;background&#39;),
 			plotRange = _self.get(&#39;plotRange&#39;),
+			backShape = _self.get(&#39;backShape&#39;),
 			width,
 			height,
 			tl,
 			cfg;
 
 		if(background){
-
 			width = plotRange.getWidth();
 			height = plotRange.getHeight();
 			tl = plotRange.tl;
@@ -112,18 +128,20 @@ Util.augment(PlotBack,{
 				width : width,
 				height :height
 			};
-			//图片
-			if(background.image){
-
-				cfg.src = background.image;
-
-				_self.addShape(&#39;image&#39;,cfg);
-
-			}else{//矩形
-				Util.mix(cfg,background);
-
-				_self.addShape(&#39;rect&#39;,cfg);
+			if(!backShape){
+				//图片
+				if(background.image){
+					cfg.src = background.image;
+				  backShape =	_self.addShape(&#39;image&#39;,cfg);
+				}else{//矩形
+					Util.mix(cfg,background);
+					backShape = _self.addShape(&#39;rect&#39;,cfg);
+				}
+				_self.set(&#39;backShape&#39;,backShape);
+			}else{
+				backShape.attr(cfg);
 			}
+			
 		}
 	},
 	//计算，设置绘图区域
@@ -134,7 +152,7 @@ Util.augment(PlotBack,{
 			canvas = _self.get(&#39;canvas&#39;),
 			width = canvas.get(&#39;width&#39;),
 			height = canvas.get(&#39;height&#39;),
-			plotRange,
+			plotRange = _self.get(&#39;plotRange&#39;),
 			top = 0, //上方的边距
 			left = 0, //左边 边距
 			right = 0,
@@ -154,9 +172,13 @@ Util.augment(PlotBack,{
 
 		start = canvas.getRelativePoint(left,height - bottom);
 		end = canvas.getRelativePoint(width - right,top);
-
-		plotRange = new PlotRange(start,end);
-		_self.set(&#39;plotRange&#39;,plotRange);
+		if(!plotRange){
+			plotRange = new PlotRange(start,end);
+			_self.set(&#39;plotRange&#39;,plotRange);
+		}else{
+			plotRange.reset(start,end);
+		}
+		
 
 	}
 });

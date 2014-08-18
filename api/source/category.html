@@ -60,18 +60,26 @@ Util.augment(Category,{
 		  var categories = _self.get(&#39;categories&#39;),
 		  	ticks = [];
 		  ticks = ticks.concat(categories);
-		  ticks.push(&#39; &#39;);
+          if(ticks[ticks.length - 1] != &#39; &#39;){
+            ticks.push(&#39; &#39;);
+          }
           _self.set(&#39;ticks&#39;,ticks);
 		}
 	},
     //ticks 获取
     changeInfo : function(info){
         var _self = this,
-            ticks = [];
-        ticks = ticks.concat(info.categories);
-        if(ticks.length){
-           ticks.push(&#39; &#39;); 
+            ticks = info.ticks;
+        if(!ticks){
+            ticks = ticks.concat(info.categories);
+            if(ticks.length &amp;&amp; ticks[ticks.length - 1] != &#39; &#39;){
+               ticks.push(&#39; &#39;); 
+            }
+        }else{
+            info.categories = [].concat(info.ticks);
+            Util.remove(info.categories,&#39; &#39;);
         }
+        
         
         _self.set(&#39;categories&#39;,info.categories);
         _self.set(&#39;ticks&#39;,ticks);
@@ -84,11 +92,11 @@ Util.augment(Category,{
     	var _self = this,
     		avg = _self._getAvgLength(),
     		offset =  avg * index;
-    	if(offset &gt;= 0){
-    		offset += avg/2;
-    	}else{
+    	//if(avg &gt;= 0){
+    	offset += avg/2;
+    	/*}else{
     		offset -= avg/2;
-    	}
+    	}*/
     	return _self._appendEndOffset(offset) + _self._getStartCoord();
     },
 <span id='Chart-Axis-Category-method-getValue'>    /**
@@ -131,11 +139,12 @@ Util.augment(Category,{
     		avg = _self._getAvgLength(),
     		current = _self.getOffsetByIndex(index);
     	
-    	if(current &gt;= 0){
+    	/*if(avg &gt;= 0){
     		current -= avg/2;
     	}else{
     		current += avg/2;
-    	}
+    	}*/
+      current -= avg/2;
     	if(_self.isVertical()){
     		return {
     			x : ortho,

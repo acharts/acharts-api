@@ -57,6 +57,19 @@ Chart.ATTRS = {
      * @type {Array}
      */
     data : undefined,
+
+<span id='Chart-property-width'>    /**
+</span>     * 宽度
+     * @type {Number}
+     */
+    width : null,
+
+<span id='Chart-property-height'>    /**
+</span>     * 高度
+     * @type {Number}
+     */
+    height : null,
+
 <span id='Chart-property-legend'>    /**
 </span>     * 标示每个图例颜色的配置项
      * @type {Object}
@@ -79,6 +92,11 @@ Chart.ATTRS = {
      * @type {Array}
      */
     series : undefined,
+<span id='Chart-property-invert'>    /**
+</span>     * 坐标轴是否翻转
+     * @type {Boolean}
+     */
+    invert : false,
 <span id='Chart-property-seriesOptions'>    /**
 </span>     * 数据图序列默认的配置项
      * @type {Object}
@@ -110,6 +128,19 @@ Chart.ATTRS = {
      * @type {Object|Array}
      */
     yAxis : undefined,
+
+<span id='Chart-property-forceFit'>    /**
+</span>     * 是否自动适应宽度
+     * @type {Boolean}
+     */
+    forceFit : false,
+
+<span id='Chart-property-fitRatio'>    /**
+</span>     * 自适应宽度时的，宽高比，默认为0，不进行自适应
+     * @type {Number}
+     */
+    fitRatio: 0,
+
 <span id='Chart-property-fields'>    /**
 </span>     * 数据中使用的字段，用于转换数据使用例如： 
      *  - fields : [&#39;intelli&#39;,&#39;force&#39;,&#39;political&#39;,&#39;commander&#39;]
@@ -241,6 +272,10 @@ Chart.ATTRS = {
 <span id='Chart-event-plotover'>    /**
 </span>     * @event plotover
      * 移入图表内部
+     * @param {Object} ev 事件对象
+     * @param {Number} x 移动到x的坐标
+     * @param {Number} y 移动到y的坐标
+     * @param {Chart.Canvas.Shape} Shape 移动到的图形
      */
     
 <span id='Chart-event-plotout'>    /**
@@ -288,24 +323,67 @@ Util.augment(Chart,{
       _self._renderTitle();
       _self._renderSeries();
       _self.get(&#39;canvas&#39;).sort();
+      _self.bindFitEvent();
     }
   },
-  
+  //获取自适应的宽度和高度
+  _getFitInfo : function(){
+    var _self = this,
+      el = _self.get(&#39;el&#39;),
+      fitRatio = _self.get(&#39;fitRatio&#39;),
+      width = Util.getWidth(el),
+      height = _self.get(&#39;height&#39;) || Util.getHeight(el);
+      
+    if(fitRatio){
+      height = width * fitRatio;
+    }
+    return {
+      width : width,
+      height : height
+    };
+  },
+<span id='Chart-method-forceFit'>  /**
+</span>   * 自适应宽度
+   */
+  forceFit : function(){
+    var _self = this,
+      plotBack = _self.get(&#39;plotBack&#39;),
+      canvas = _self.get(&#39;canvas&#39;),
+      fitInfo = _self._getFitInfo(),
+      seriesGroup = _self.get(&#39;seriesGroup&#39;);
+
+    canvas.setSize(fitInfo.width,fitInfo.height);
+    plotBack.repaint();
+    _self._renderTitle();
+    seriesGroup.repaint();
+
+  },
   //渲染画板
   _renderCanvas : function(){
     var _self = this,
       id = _self.get(&#39;id&#39;) || _self.get(&#39;render&#39;) || &#39;&#39;;
     id = id.replace(&#39;#&#39;,&#39;&#39;);
     var  el = document.getElementById(id),
-      width = _self.get(&#39;width&#39;) || Util.getWidth(el),
-      height = _self.get(&#39;height&#39;) || Util.getHeight(el),
-      canvas = new Canvas({
-        width : width,
-        height :height,
-        id : id
-      });
+      width,
+      height,
+      canvas;
+
+     _self.set(&#39;el&#39;,el);
+    if(_self.get(&#39;forceFit&#39;)){
+      var info = _self._getFitInfo();
+      width = info.width;
+      height = info.height;
+    }else{
+      width = _self.get(&#39;width&#39;) || Util.getWidth(el);
+      height = _self.get(&#39;height&#39;) || Util.getHeight(el);
+    }
+    canvas = new Canvas({
+      width : width,
+      height :height,
+      id : id
+    });
     canvas.chart = _self;
-    _self.set(&#39;el&#39;,el);
+   
     _self.set(&#39;canvas&#39;,canvas);
   },
   //渲染背景、边框等
@@ -321,31 +399,46 @@ Util.augment(Chart,{
     plotBack = canvas.addGroup(PlotBack,plotCfg),
     plotRange = plotBack.get(&#39;plotRange&#39;);
 
+    _self.set(&#39;plotBack&#39;,plotBack);
     _self.set(&#39;plotRange&#39;,plotRange);
 
   },
   //渲染title
-  _renderTitle : function(){
+  _renderTitle : function(force){
     var _self = this,
       title = _self.get(&#39;title&#39;),
       subTitle = _self.get(&#39;subTitle&#39;),
       theme = _self.get(&#39;theme&#39;),
-      canvas = _self.get(&#39;canvas&#39;);
+      canvas = _self.get(&#39;canvas&#39;),
+      tcfg = {},
+      scfg = {};
     if(title){
+      var titleShape = _self.get(&#39;titleShape&#39;);
       if(title.x == null){
-        title.x = canvas.get(&#39;width&#39;)/2;
-        title.y = title.y || 15;
+        tcfg.x = canvas.get(&#39;width&#39;)/2;
+        tcfg.y = title.y || 15;
       }
-      title = Util.mix({},theme.title,title);
-      canvas.addShape(&#39;label&#39;,title);
+      if(!titleShape){
+        tcfg = Util.mix(tcfg,theme.title,title);
+        titleShape = canvas.addShape(&#39;label&#39;,tcfg);
+        _self.set(&#39;titleShape&#39;,titleShape);
+      }else{
+        titleShape.attr(tcfg);
+      }
     }
     if(subTitle){
+      var subTitleShape = _self.get(&#39;subTitleShape&#39;);
       if(subTitle.x == null){
-        subTitle.x = canvas.get(&#39;width&#39;)/2;
-        subTitle.y = subTitle.y || 35;
+        scfg.x = canvas.get(&#39;width&#39;)/2;
+        scfg.y = subTitle.y || 35;
       }
-      subTitle = Util.mix({},theme.subTitle,subTitle);
-      canvas.addShape(&#39;label&#39;,subTitle);
+      if(!subTitleShape){
+        scfg = Util.mix(scfg,theme.subTitle,subTitle);
+        subTitleShape = canvas.addShape(&#39;label&#39;,scfg);
+        _self.set(&#39;subTitleShape&#39;,subTitleShape);
+      }else{
+        subTitleShape.attr(scfg);
+      }
     }
   },
   _getDefaultType : function(){
@@ -375,6 +468,7 @@ Util.augment(Chart,{
     Util.mix(true,cfg,theme,{
       colors :  attrs.colors,
       data : attrs.data,
+      invert : _self.get(&#39;invert&#39;),
       fields : attrs.fields,
       series : attrs.series,
       seriesOptions : attrs.seriesOptions,
@@ -400,6 +494,19 @@ Util.augment(Chart,{
     seriesGroup = _self.get(&#39;canvas&#39;).addGroup(SeriesGroup,cfg);
     _self.set(&#39;seriesGroup&#39;,seriesGroup);
 
+  },
+  bindFitEvent : function(){
+    var _self = this,
+      delay = null;
+
+    function resize (){
+      clearTimeout(delay);
+
+      delay = setTimeout(function(){
+        _self.forceFit();
+      },200);
+    }
+    Util.addEvent(window,&#39;resize&#39;,resize);
   },
 <span id='Chart-method-repaint'>  /**
 </span>   * 重绘整个图
