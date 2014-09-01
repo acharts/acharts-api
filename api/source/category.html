@@ -20,7 +20,7 @@
  * @ignore
  */
 
-var Util = require(&#39;../../util&#39;),
+var Util = require(&#39;achart-util&#39;),
 	Axis = require(&#39;./base&#39;);
 
 <span id='Chart-Axis-Category'>/**
@@ -71,7 +71,7 @@ Util.augment(Category,{
         var _self = this,
             ticks = info.ticks;
         if(!ticks){
-            ticks = ticks.concat(info.categories);
+            ticks = [].concat(info.categories);
             if(ticks.length &amp;&amp; ticks[ticks.length - 1] != &#39; &#39;){
                ticks.push(&#39; &#39;); 
             }

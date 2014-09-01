@@ -22,8 +22,8 @@
 
 
 var 
-	Item = require(&#39;./plotitem&#39;),
-	Util = require(&#39;../util&#39;),
+	Item = require(&#39;achart-plot&#39;).Item,
+	Util = require(&#39;achart-util&#39;),
 	CLS_LABELS = &#39;x-chart-labels&#39;;
 
 <span id='Chart-Labels'>/**
@@ -254,7 +254,7 @@ Util.augment(Labels,{
 	remove : function(){
 		var _self = this,
 			customDiv = _self.get(&#39;customDiv&#39;);
-		Labels.superclass.remove(this);
+		Labels.superclass.remove.call(this);
 		if(customDiv){
 			customDiv.parentNode.removeChild(customDiv);
 		}

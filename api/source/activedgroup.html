@@ -20,7 +20,7 @@
  * @ignore
  */
 
-var Util = require(&#39;../../util&#39;);
+var Util = require(&#39;achart-util&#39;);
 <span id='Chart-ActivedGroup'>/**
 </span> * @class Chart.ActivedGroup
  * @protected
@@ -73,7 +73,7 @@ Util.augment(Group,{
 	 * @param  {Object} item 可激活的子项
 	 */
 	onActived : function(item){
-		this.fireUpGroup(&#39;actived&#39;,item);
+		this.fireUpGroup &amp;&amp; this.fireUpGroup(&#39;actived&#39;,item);
 	},
 <span id='Chart-ActivedGroup-method-onUnActived'>	/**
 </span>	 * @protected
@@ -81,7 +81,7 @@ Util.augment(Group,{
 	 * @param  {Object} item 可激活的子项
 	 */
 	onUnActived : function(item){
-		this.fireUpGroup(&#39;unactived&#39;,item);
+		this.fireUpGroup &amp;&amp; this.fireUpGroup(&#39;unactived&#39;,item);
 	},
 <span id='Chart-ActivedGroup-method-setActivedItem'>	/**
 </span>	 * 设置激活的元素

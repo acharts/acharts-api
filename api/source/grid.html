@@ -22,8 +22,8 @@
 
 
 var 
-	Item = require(&#39;../plotitem&#39;),
-	Util = require(&#39;../../util&#39;),
+	Item = require(&#39;achart-plot&#39;).Item,
+	Util = require(&#39;achart-util&#39;),
 	CLS_GRID = &#39;x-chart-grid&#39;;
 
 function ensure(attrName,self,defVal){
@@ -170,7 +170,7 @@ Util.augment(Grid,{
 		_self.set(&#39;items&#39;,items);
 		_self._clearPre();
 		_self._precessItems(items);
-		_self._changeGridLines(items,CLS_GRID + &#39;-line&#39;,true);
+		_self._changeGridLines(items,CLS_GRID + &#39;-line&#39;);
 		_self._changeMinorLinses();
 
 	},
@@ -212,8 +212,9 @@ Util.augment(Grid,{
   	_self.set(&#39;gridLine&#39; + cls,gridLine);
 	},
 	//更改栅格
-	_changeGridLines : function(items,cls,animate){
+	_changeGridLines : function(items,cls){
 		var _self = this,
+			animate = _self.get(&#39;animate&#39;),
 
       gridLine = _self.get(&#39;gridLine&#39; + cls);
     if(gridLine){

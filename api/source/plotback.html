@@ -21,7 +21,7 @@
  */
 
 
-var Util = require(&#39;../util&#39;),
+var Util = require(&#39;achart-util&#39;),
 	PlotItem = require(&#39;./plotitem&#39;),
 	PlotRange = require(&#39;./plotrange&#39;);
 
@@ -38,6 +38,7 @@ var PlotBack = function(cfg){
 PlotBack.ATTRS = {
 
 	elCls : &#39;x-chart-back&#39;,
+	
 	zIndex : 0,
 <span id='Chart-PlotBack-property-margin'>	/**
 </span>	 * 边距，来决定绘图范围,如果是一个值那么4个边框都是统一的数字，如果是一个数组，则4个边框分别对应值

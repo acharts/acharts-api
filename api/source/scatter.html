@@ -20,9 +20,9 @@
  * @ignore
  */
 
-var Util = require(&#39;../../util&#39;),
-  Cartesian = require(&#39;./cartesian&#39;),
-  ActiveGroup = require(&#39;../mixin/activedgroup&#39;);
+var Util = require(&#39;achart-util&#39;),
+  Cartesian = require(&#39;achart-series&#39;).Cartesian,
+  ActiveGroup = require(&#39;achart-actived&#39;).Group;
 
 function trySet(obj,name,value){
   if(obj &amp;&amp; !obj[name]){
@@ -42,11 +42,15 @@ var Scatter = function(cfg){
 Scatter.ATTRS = {
   elCls : &#39;x-chart-scatter&#39;,
   stickyTracking : false,
+
+  autoPaint : false,
 <span id='Chart-Series-Scatter-property-animate'>  /**
 </span>   * 生成时不执行动画
    * @type {Object}
    */
-  animate : false
+  animate : false,
+
+  legendType : null
 };
 
 Util.extend(Scatter,Cartesian);

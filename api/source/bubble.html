@@ -22,9 +22,9 @@
 
 
 var 
-  Cartesian = require(&#39;./cartesian&#39;),
-  ActiveGroup = require(&#39;../mixin/activedgroup&#39;),
-  Util = require(&#39;../../util&#39;);
+  Cartesian = require(&#39;achart-series&#39;).Cartesian,
+  ActiveGroup = require(&#39;achart-actived&#39;).Group,
+  Util = require(&#39;achart-util&#39;);
 
 <span id='Chart-Series-Bubble'>/**
 </span> * @class Chart.Series.Bubble
@@ -36,7 +36,7 @@ var Bubble = function(cfg){
 
 Bubble.ATTRS = {
   elCls : &#39;x-chart-bubble&#39;,
-  type : &#39;buble&#39;,
+  type : &#39;bubble&#39;,
 <span id='Chart-Series-Bubble-property-circle'>  /**
 </span>   * 气泡的配置信息
    * @type {Object}
@@ -47,8 +47,12 @@ Bubble.ATTRS = {
    * @type {Object}
    */
   activeCircle : {},
+
+  legendType : &#39;circle&#39;,
   
   animate : true,
+
+  autoPaint : false,
 
   stickyTracking : false
 };
@@ -183,7 +187,6 @@ Util.augment(Bubble,{
     }
 
     shape.set(&#39;point&#39;,point);
-    
   },
   _getRadius : function(r){
     return Math.pow(r,.75);
@@ -191,7 +194,6 @@ Util.augment(Bubble,{
    //鼠标hover
   onMouseOver : function(){
     var _self = this
-    
     _self.get(&#39;group&#39;).on(&#39;mouseover&#39;,function(ev){
       var target = ev.target,
         shape = target.shape;
@@ -200,7 +202,7 @@ Util.augment(Bubble,{
   }, 
   //鼠标hover
   onMouseOut : function(){
-    var _self = this
+    var _self = this;
     
     _self.get(&#39;group&#39;).on(&#39;mouseout&#39;,function(ev){
       var target = ev.target,

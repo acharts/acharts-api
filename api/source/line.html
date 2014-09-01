@@ -22,7 +22,7 @@
 
 var 
   Cartesian = require(&#39;./cartesian&#39;),
-  Util = require(&#39;../../util&#39;);
+  Util = require(&#39;achart-util&#39;);
 
 function trySet(obj,name,value){
   if(obj &amp;&amp; !obj[name]){
@@ -74,7 +74,9 @@ Line.ATTRS = {
 </span>   * 是否平滑的线
    * @type {Boolean}
    */
-  smooth : false
+  smooth : false,
+  
+  legendType : &#39;line&#39;
 };
 
 Util.augment(Line,{

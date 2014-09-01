@@ -22,9 +22,9 @@
 
 
 var 
-  Util = require(&#39;../../util&#39;),
+  Util = require(&#39;achart-util&#39;),
   Cartesian = require(&#39;./cartesian&#39;),
-  ActiveGroup = require(&#39;../mixin/activedgroup&#39;),
+  ActiveGroup = require(&#39;achart-actived&#39;).Group,
   Stacked = require(&#39;./stacked&#39;),
   Group = require(&#39;./itemgroup&#39;);
 
@@ -73,7 +73,9 @@ var Column = function(cfg){
 
 
 Column.ATTRS = {
+  
   type : &#39;column&#39;,
+
   elCls : &#39;x-chart-column&#39;,
 <span id='Chart-Series-Column-property-columnWidth'>  /**
 </span>   * 每一个子项的宽度,自动计算得出
@@ -201,7 +203,7 @@ Util.augment(Column,{
   _getIndexInfo : function(){
     var _self = this,
       parent = _self.get(&#39;parent&#39;),
-      series = parent.getSeries(),
+      series = parent.getSeries ? parent.getSeries() : parent.get(&#39;children&#39;),
       curIndex,
       count,
       columns = [];

@@ -23,7 +23,7 @@
 
 var 
     Abstract = require(&#39;./abstract&#39;),
-    Util = require(&#39;../../util&#39;),
+    Util = require(&#39;achart-util&#39;),
     CLS_AXIS = &#39;x-chart-axis&#39;;
 
 //是否在2个数之间
@@ -125,8 +125,9 @@ Util.augment(Axis,{
             var info = _self.getRangeInfo();
             _self.set(&#39;start&#39;,info.start);
             _self.set(&#39;end&#39;,info.end);
+            _self.set(&#39;orthoEnd&#39;,_self._getOrthoEnd());
         }
-        _self.set(&#39;orthoEnd&#39;,_self._getOrthoEnd());
+        
 
         _self.set(&#39;indexCache&#39;,{});
         _self.set(&#39;pointCache&#39;,[]);
@@ -152,9 +153,18 @@ Util.augment(Axis,{
                 }
                 
             }else{
+                if(position == &#39;top&#39;){
+                    start = {};
+                    start.x = plotRange.start.x;
+                    start.y = plotRange.end.y;
+
+                    end = plotRange.end;
+
+                }else{
+                    end.x = plotRange.end.x;
+                    end.y = start.y;
+                }
                 
-                end.x = plotRange.end.x;
-                end.y = start.y;
             }
 
             rst.start = start;
@@ -360,7 +370,7 @@ Util.augment(Axis,{
             directfactor = _self._getDirectFactor();
             if(offset == 0){
                 offset = offset + tickOffset * directfactor;
-            }else if(offset &gt; 0){
+            }else if(directfactor &gt; 0){
             
                 offset = offset + tickOffset;
             }else{
@@ -558,7 +568,12 @@ Util.augment(Axis,{
             var subPath = Util.substitute(&#39;M{x1} {y1}L{x2} {y2}&#39;,item);
             path += subPath;
         });
-        Util.animPath(tickShape,path,2);
+        if(_self.get(&#39;animate&#39;)){
+            Util.animPath(tickShape,path,2);
+        }else{
+            tickShape.attr(&#39;path&#39;,path);
+        }
+        
     },
 
     //获取方向的系数，坐标轴方向跟浏览器的方向是否一致

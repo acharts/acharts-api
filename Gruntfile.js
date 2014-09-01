@@ -6,7 +6,8 @@ module.exports = function(grunt) {
             main: {
                 // source paths with your code
                 src: [
-                    "../acharts/src"
+                    "../acharts/src",
+                    "../achart-*/src"
                     // globbing supported!
                 ],
 

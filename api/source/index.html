@@ -15,28 +15,12 @@
   </script>
 </head>
 <body onload="prettyPrint(); highlight();">
-  <pre class="prettyprint lang-js"><span id='Axis'>/**
-</span> * @fileOverview 坐标轴的入口文件
- * @ignore
- */
+  <pre class="prettyprint lang-js">	
+	var Raphael = require(&#39;./core&#39;);
+	require(&#39;./svg&#39;);
+	require(&#39;./vml&#39;);
 
-
-var
-	Axis = require(&#39;./base&#39;);
-
-Axis.Category = require(&#39;./category&#39;);
-
-Axis.Number = require(&#39;./number&#39;);
-
-Axis.Time = require(&#39;./time&#39;);
-
-Axis.Auto = require(&#39;./auto&#39;);
-
-Axis.Circle = require(&#39;./circle&#39;);
-
-Axis.Radius = require(&#39;./radius&#39;);
-
-return Axis;
+module.exports = Raphael;
 </pre>
 </body>
 </html>

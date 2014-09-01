@@ -22,8 +22,8 @@
 
   
 var 
-  Util = require(&#39;../../util&#39;),
-  DateUtil = require(&#39;../../date&#39;),
+  Util = require(&#39;achart-util&#39;),
+  DateUtil = require(&#39;achart-date&#39;),
   snapArray = [0,1,1.5,2,2.5,3,4,5,6,8,10],
   intervalArray = [0,1,2.5,5,10],
   MIN_COUNT = 5, //最小6个坐标点
@@ -285,7 +285,7 @@ Auto.caculate = function(info,stackType){
       max = snapMultiple(max,interval,true);
       min = snapMultiple(min,interval);
 
-      count = (max - min) / interval;
+      count = Math.round((max - min) / interval);
     }
 
   }
@@ -305,6 +305,7 @@ Auto.caculate = function(info,stackType){
   return {
     min : min,
     max : tryFixed(max,interval),
+
     interval : interval,
     count : count,
     ticks : ticks,
@@ -343,7 +344,7 @@ function getYear(date){
 }
 
 function createYear(year){
-  return new Date(year,0,01).getTime();
+  return Date.UTC(year,0,01);
 }
 
 function getMonth(date){
@@ -360,7 +361,7 @@ function diffMonth(min,max){
 }
 
 function creatMonth(year,month){
-  return new Date(year,month,01).getTime();
+  return Date.UTC(year,month,01);
 }
 
 function diffDay(min,max){
@@ -382,12 +383,13 @@ Auto.Time.caculate = function(info){
     data = info.data,
     interval = info.interval,
     ticks = [],
-    count;
+    count,
+    rst;
     
 
 
   if(isNull(min) || isNull(max) || isNull(interval)){
-    var rst = analyzeData(data,function(date){
+    rst = analyzeData(data,function(date){
       if(Util.isDate(date)){
         date = date.getTime();
       }
@@ -432,7 +434,7 @@ Auto.Time.caculate = function(info){
         interval = year * yms;
         var maxYear = getYear(max);
           
-        for(var i = minYear; i &lt; maxYear + year; i = i + year){
+        for(var i = minYear; i &lt;= maxYear + year; i = i + year){
           ticks.push(createYear(i));
         }
         interval = null;
@@ -456,7 +458,7 @@ Auto.Time.caculate = function(info){
           ddays = diffDay(min,max);
         interval = day * dms;
         for(var i = 0 ; i &lt;= ddays + day; i = i + day){
-          ticks.push(new Date(year,month,mday + i).getTime());
+          ticks.push(Date.UTC(year,month,mday + i));
         }
 
       }else if(interval &gt; HOUR_MS){ //大于一个小时
@@ -470,7 +472,7 @@ Auto.Time.caculate = function(info){
         interval = hours * HOUR_MS;
 
         for(var i = 0 ; i &lt;= dHours + hours; i = i + hours){
-          ticks.push(new Date(year,month,day,hour + i).getTime());
+          ticks.push(Date.UTC(year,month,day,hour + i));
         }
 
       }else if(interval &gt; MINUTE_MS) { //最小单位是分钟
@@ -510,8 +512,8 @@ Auto.Time.caculate = function(info){
   }
 
   return {
-    max : max,
-    min : min,
+    max : rst.max || max,
+    min : rst.min || min,
     interval : interval,
     ticks : ticks,
     count : ticks.length

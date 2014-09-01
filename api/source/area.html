@@ -23,7 +23,7 @@
 
 var 
   Line = require(&#39;./line&#39;),
-  Util = require(&#39;../../util&#39;),
+  Util = require(&#39;achart-util&#39;),
   Stacked = require(&#39;./stacked&#39;),
   REGEX_MOVE = /^M.*(M).*$/;
 
@@ -138,10 +138,12 @@ Util.augment(Area,{
       areaShape = _self.get(&#39;areaShape&#39;),
       points = _self.getPoints(),
       path = _self._getAreaPath(points);
-    Util.animPath(areaShape,path);
-
+    if(_self.get(&#39;animate&#39;)){
+      Util.animPath(areaShape,path);
+    }else{
+      areaShape.attr(&#39;path&#39;,path);
+    }
   },
-  
   //绘制区域
   drawArea : function(points){
     var _self = this,
@@ -210,13 +212,36 @@ Util.augment(Area,{
     }
     return path;
   },
+  //获取第一个非null节点
+  _getFirstPoint : function(points){
+    var rst = null;
+    Util.each(points,function(point){
+      if(point.value != null){
+        rst = point;
+        return false;
+      }
+    });
+    return rst;
+  },
+  //获取最后一个非null节点
+  _getLastPoint : function(points){
+    var rst = null;
+    for(var i = points.length - 1; i &gt;=0 ; i--){
+      var point = points[i];
+      if(point.value != null){
+        rst = point;
+        break;
+      }
+    }
+    return rst;
+  },
   //点转换成区域的path
   points2area : function(points){
     var _self = this,
       length = points.length,
       value0 = _self.getBaseValue(),
-      first = points[0],
-      last = points[length - 1],
+      first = _self._getFirstPoint(points) || points[0],
+      last = _self._getLastPoint(points) || points[length - 1],
       isInCircle = _self.isInCircle(),
       linePath,
       invert = _self.get(&#39;invert&#39;), //是否坐标轴旋转
@@ -238,7 +263,7 @@ Util.augment(Area,{
         if(REGEX_MOVE.test(path)){
           path = Util.parsePathString(path);
           var temp = [],
-            preBreak = first;;
+            preBreak = path[0];
           Util.each(path,function(item,index){
             if(index !== 0 &amp;&amp; item[0] == &#39;M&#39;){ //如果遇到中断的点，附加2个点
               var n1 = [],
@@ -251,7 +276,7 @@ Util.augment(Area,{
               n1[2] = value0;
 
               n0[0] = &#39;L&#39;;
-              n0[1] = preBreak.x;
+              n0[1] = preBreak[1];
               n0[2] = value0;
 
               n2[0] = &#39;M&#39;;

@@ -21,7 +21,7 @@
  */
 
 
-var Util = require(&#39;../../util&#39;),
+var Util = require(&#39;achart-util&#39;),
   NAixs = require(&#39;./number&#39;);
 
 function parseTime(d){
@@ -56,6 +56,8 @@ Time.ATTRS = {
   startDate : null,
 
   dateFormat : null,
+
+  autoOffset : true,
 <span id='Chart-Axis-Time-property-endDate'>  /**
 </span>   * 结束日期时间
    * @type {Date}

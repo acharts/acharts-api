@@ -20,11 +20,11 @@
  * @ignore
  */
   
-var Util = require(&#39;./util&#39;),
-  Canvas = require(&#39;./canvas&#39;),
-  PlotBack = require(&#39;./chart/plotback&#39;),
-  SeriesGroup = require(&#39;./chart/seriesgroup&#39;),
-  Theme = require(&#39;./chart/theme&#39;);
+var Util = require(&#39;achart-util&#39;),
+  Canvas = require(&#39;achart-canvas&#39;),
+  PlotBack = require(&#39;achart-plot&#39;).Back,
+  SeriesGroup = require(&#39;./seriesgroup&#39;),
+  Theme = require(&#39;achart-theme&#39;);
 
 <span id='Chart'>/**
 </span> * @class Chart
@@ -282,8 +282,7 @@ Chart.ATTRS = {
 </span>     * @event plotout
      * 移出图表内部
      */
-    
-  }
+}
 
 
 
@@ -323,7 +322,9 @@ Util.augment(Chart,{
       _self._renderTitle();
       _self._renderSeries();
       _self.get(&#39;canvas&#39;).sort();
-      _self.bindFitEvent();
+      if(_self.get(&#39;forceFit&#39;)){
+        _self.bindFitEvent();
+      }
     }
   },
   //获取自适应的宽度和高度

@@ -15,306 +15,527 @@
   </script>
 </head>
 <body onload="prettyPrint(); highlight();">
-  <pre class="prettyprint lang-js">  
-var 
- 
-  Util = require(&#39;../util&#39;);
-
-<span id='Chart-Canvas-Base'>/**
-</span> * @class Chart.Canvas.Base
- * 图形控件或者分组的基类
+  <pre class="prettyprint lang-js"><span id='Util'>/**
+</span> * @fileOverview 所有数据序列的基类
+ * @ignore
  */
-var Base = function(cfg){
-  this.cfg = cfg;
-  this._attrs = {
-    autoRender : true,
-    visible : true
-  };
-  this.events = {};
-  var defaultCfg = this.getDefaultCfg();
-  Util.mix(this._attrs,defaultCfg,cfg);
-  if(this.get(&#39;autoRender&#39;)){
-    this.render();
-  }
-      
+
+var Util = require(&#39;achart-util&#39;),
+  Item = require(&#39;achart-plot&#39;).Item,
+  ShowLabels = require(&#39;achart-labels&#39;).ShowLabels,
+  Actived = require(&#39;achart-actived&#39;),
+  Markers = require(&#39;achart-markers&#39;);
+
+<span id='Chart-Series'>/**
+</span> * @class Chart.Series
+ * 数据序列的基类，是一个抽象类，不能直接实例化
+ */
+var Series = function(cfg){
+  Series.superclass.constructor.call(this,cfg);
 };
 
-Base.ATTRS = {
-<span id='Chart-Canvas-Base-property-zIndex'>      /**
-</span>       * 所在父元素中的优先级，仅在父元素排序时有效
-       * @type {Number}
-       */
-  zIndex : null,
-<span id='Chart-Canvas-Base-property-el'>  /**
-</span>   * @protected
-   * 底层使用了raphael 所以此属性对应raphael的对对象
+Util.extend(Series,Item);
+
+Util.mixin(Series,[ShowLabels,Actived]);
+
+Series.ATTRS = {
+  zIndex :  5,
+<span id='Chart-Series-property-markers'>  /**
+</span>   * 标志数据序列上的点的配置
+   *
+   *  - type 默认类型是path,可以是任意基本图形
+   * @type {Object}
    */
-  el : null,
-<span id='Chart-Canvas-Base-property-node'>  /**
-</span>   * svg或者vml对象
-   * @type {HTMLElement}
+  markers : null,
+<span id='Chart-Series-property-labels'>  /**
+</span>   * 显示对应点的文本的配置项
+   * @type {Chart.Labels}
    */
-  node : null,
-<span id='Chart-Canvas-Base-property-canvas'>  /**
-</span>   * 画布
-   * @type {Chart.Canvas}
-   */
-  canvas : null,
-<span id='Chart-Canvas-Base-property-visible'>  /**
-</span>   * 是否显示
+  labels : null,
+<span id='Chart-Series-property-animate'>  /**
+</span>   * 创建序列时是否触发动画
    * @type {Boolean}
    */
-  visible : true  
+  animate : false,
+<span id='Chart-Series-property-duration'>  /**
+</span>   * 生成时动画的时间间隔
+   * @type {Number}
+   */
+  duration : 1000,
+<span id='Chart-Series-property-changeDuration'>  /**
+</span>   * 发生改变的动画时间
+   * @type {Number}
+   */
+  changeDuration : 400,
+<span id='Chart-Series-property-data'>  /**
+</span>   * 显示的数据
+   * @type {Array}
+   */
+  data : [],
+<span id='Chart-Series-property-autoPaint'>  /**
+</span>   * 渲染时就绘制图形
+   * @type {Boolean}
+   */
+  autoPaint : true,
+<span id='Chart-Series-property-enableMouseTracking'>  /**
+</span>   * 鼠标移动到数据序列图中是否触发事件
+   * @type {Boolean}
+   */
+  enableMouseTracking : true,
+<span id='Chart-Series-property-stickyTracking'>  /**
+</span>   * 是否随着鼠标在画板上移动触发相应的事件
+   *
+   * - true ，则鼠标从序列图中移出时不会触发移出的事件，当鼠标在画板上移动时序列图会做出对应的动作
+   * 
+   * @type {Boolean}
+   */
+  stickyTracking : true,
+<span id='Chart-Series-property-xField'>  /**
+</span>   * 用于定位数据的字段，通常是x轴上的数据，但是也可以用于饼图之类不需要x轴的数据序列
+   * @type {String}
+   */
+  xField : &#39;x&#39;,
+<span id='Chart-Series-property-yField'>  /**
+</span>   * 标示数据的值,通常用于y轴上的数据，但是也可以用于饼图、雷达图之类
+   * @type {String}
+   */
+  yField : &#39;y&#39;,
+<span id='Chart-Series-property-itemName'>  /**
+</span>   * 活动子项的名称，用于组成 itemactived,itemunactived的事件
+   * @protected
+   * @type {String}
+   */
+  itemName : &#39;seriesItem&#39;,
+<span id='Chart-Series-property-legendType'>  /**
+</span>   * 显示legend的类型，默认是矩形
+   * @type {String}
+   */
+  legendType : &#39;rect&#39;,
+<span id='Chart-Series-property-groupName'>  /**
+</span>   * 所属分组的名称,用于事件中标示父元素
+   * @protected
+   * @type {String}
+   */
+  groupName : &#39;series&#39;
+
 };
 
-Util.augment(Base,{
+Util.augment(Series,{
 
-<span id='Chart-Canvas-Base-method-getDefaultCfg'>  /**
-</span>   * 获取默认的配置信息
-   * @return {Object} 默认的属性
-   */
-  getDefaultCfg : function(){
-    return {};
-  },
-<span id='Chart-Canvas-Base-method-set'>  /**
-</span>   * 设置属性信息
-   * @protected
-   */
-  set : function(name,value){
-    this._attrs[name] = value;
-  },
-<span id='Chart-Canvas-Base-method-get'>  /**
-</span>   * 获取属性信息
-   * @protected
-   */
-  get : function(name){
-    return this._attrs[name];
-  },
-<span id='Chart-Canvas-Base-method-getCfgAttr'>  /**
-</span>   * 获取初始配置的信息
-   * @param  {String} name 配置项名称
-   * @return {*}  初始值
-   */
-  getCfgAttr : function(name){
-      return this.cfg[name];
-
-  },
-<span id='Chart-Canvas-Base-method-show'>  /**
-</span>   * 显示
-   */
-  show : function(){
-      this.get(&#39;el&#39;).show();
-      this.set(&#39;visible&#39;,true);
-  },
-<span id='Chart-Canvas-Base-method-hide'>  /**
-</span>   * 隐藏
-   */
-  hide : function(){
-      this.get(&#39;el&#39;).hide();
-      this.set(&#39;visible&#39;,false);
-  },  
-<span id='Chart-Canvas-Base-method-attr'>  /**
-</span>   * 设置或者设置属性，有一下3中情形：
-   *
-   *   - name为字符串，value 为空，获取属性值
-   *   - name为字符串，value不为空，设置属性值，返回this
-   *   - name为键值对，value 为空，设置属性值
-   *   
-   * @param  {String|Object} name  属性名
-   * @param  {*} value 属性值
-   * @return {*} 属性值
-   */
-  attr : function(name,value){
-    var _self = this,
-      el = _self.get(&#39;el&#39;);
-    if(Util.isObject(name)){
-      Util.each(name,function(v,k){
-        _self.attr(k,v);
-      });
-      return _self;
-    }
-    if(value !== undefined){
-      return _self._setAttr(name,value);
-    }
-    return _self._getAttr(name);
-  },
-<span id='Chart-Canvas-Base-method-on'>  /**
-</span>   * 附加事件
-   * @param  {String}   eventType 事件类型
-   * @param  {Function} fn  事件处理函数
-   */
-  on : function(eventType,fn){
-    var _self = this,
-      node = _self.get(&#39;node&#39;),
-      events = this.events,
-      callbacks = events[eventType];
-
-    Util.addEvent(node,eventType,fn);
-    if(!callbacks){
-      callbacks = events[eventType] = [];
-    }
-    callbacks.push(fn);
-    return this;
-  },
-<span id='Chart-Canvas-Base-method-off'>  /**
-</span>   * 移除事件
-   * @param  {String}   eventType 事件类型
-   * @param  {Function} fn  事件处理函数
-   */
-  off : function(eventType,fn){
-    var _self = this,
-      node = _self.get(&#39;node&#39;),
-      events = this.events,
-      callbacks = events[eventType];
-    if(!eventType){
-      Util.each(events,function(callbacks,type){
-          Util.each(callbacks,function(m){
-            Util.removeEvent(node,type,m);
-          });
-      });
-      this.events = {};
-      return this;
-    }
-    Util.removeEvent(node,eventType,fn);
-    
-    if(callbacks){
-      Util.remove(callbacks,fn);
-    }
-    return this;
-  },
-<span id='Chart-Canvas-Base-method-fire'>  /**
-</span>   * 触发事件
-   * @param  {String} eventType 事件类型
-   */
-  fire : function(eventType,eventObj){
-    var _self = this,
-      events = _self.events,
-      callbacks = events[events];
-    if(callbacks){
-      Util.each(callbacks,function(m){
-        m(eventObj);
-      });
-    }
-  },
-  //获取属性值
-  _getAttr : function(name){
-    var _self = this,
-      el = _self.get(&#39;el&#39;),
-      value = el.attr ? el.attr(name) : &#39;&#39;,
-      m = &#39;__get&#39; + Util.ucfirst(name);
-    if(_self[m]){
-      value = _self[m](value);
-    }
-    return value;
-  },
-  //设置属性值
-  _setAttr : function(name,value){
-    var _self = this,
-      el = _self.get(&#39;el&#39;),
-      m = &#39;__set&#39; + Util.ucfirst(name);
-    if(_self[m]){
-      _self[m](value);
-    }else{
-      el.attr &amp;&amp; el.attr(name,value);
-    }
-    return _self;
-  },
-<span id='Chart-Canvas-Base-method-beforeRenderUI'>  /**
-</span>   * @protected
-   * 渲染控件
-   */
-  beforeRenderUI : function(){
-
-  },
-<span id='Chart-Canvas-Base-method-render'>  /**
-</span>   * 渲染控件/图形
-   */
-  render : function(){
-    var _self = this,
-      cls = _self.get(&#39;elCls&#39;),
-      zIndex = _self.get(&#39;zIndex&#39;),
-      node;
-
-    if(!_self.get(&#39;rendered&#39;)){
-          _self.beforeRenderUI();
-
-      _self.renderUI();
-      _self.set(&#39;rendered&#39;,true);
-          node = _self.get(&#39;node&#39;);
-          if(this.get(&#39;visible&#39;) == false){
-              this.hide();
-          }
-          if(cls){
-              var oldCls = node.getAttribute(&#39;class&#39;);
-                  
-              if(oldCls){
-                 node.setAttribute(&#39;class&#39;,oldCls + &#39; &#39; + cls); 
-              }else{
-                 node.setAttribute(&#39;class&#39;,cls); 
-              }
-              
-          }
-          if(zIndex != null){
-              node.setAttribute(&#39;zIndex&#39;,zIndex);
-              if(Util.vml){
-                  node.style.zIndex = zIndex;
-              }
-          }
-          _self.bindUI();
-    }
-  },
-
-<span id='Chart-Canvas-Base-method-renderUI'>  /**
-</span>   * @protected
-   * 渲染控件
-   */
   renderUI : function(){
-
-  },
-<span id='Chart-Canvas-Base-method-bindUI'>  /**
-</span>   * @protected
-   * 绑定事件
-   */
-  bindUI : function(){
-
-  },
-<span id='Chart-Canvas-Base-method-remove'>  /**
-</span>   * 移除，从父元素中移除
-   * @param  {Boolean} [destroy=true] 
-   */
-  remove : function(destroy){
-    if(destroy == undefined){
-      destroy = true;
-    }
     var _self = this;
-    if(_self.get(&#39;parent&#39;)){
-      _self.get(&#39;parent&#39;).removeChild(_self,destroy);
-          _self.set(&#39;parent&#39;,null);
-    }else if(destroy){
-      _self.destroy();
+    
+    Series.superclass.renderUI.call(_self);
+    
+    _self.processColor();
+    _self.renderLabels();
+    _self.renderMarkers();
+    if(_self.get(&#39;autoPaint&#39;)){
+      _self.paint();
+    }
+
+  },
+  bindUI : function(){
+    var _self = this;
+    Series.superclass.bindUI.call(_self);
+    if(_self.get(&#39;enableMouseTracking&#39;)){
+
+      _self.onMouseOver();
+      var parent = _self.get(&#39;parent&#39;);
+      
+      /**/_self.on(&#39;mouseover&#39;,function(){
+        if(parent.setActivedItem){
+          if(!parent.isItemActived(_self)){
+            parent.setActivedItem(_self);
+          }
+        }
+      });
+    }
+    if(!_self.get(&#39;stickyTracking&#39;)){
+      _self.onMouseOut();
     }
   },
-<span id='Chart-Canvas-Base-method-destroy'>  /**
-</span>   * 析构函数
+<span id='Chart-Series-method-changeData'>  /**
+</span>   * 更改数据
+   * @param  {Array} data 数据
    */
-  destroy : function(){
+  changeData : function(data,redraw){
     var _self = this,
-      el = _self.get(&#39;el&#39;),
-          destroyed = _self.get(&#39;destroyed&#39;),
-          node = _self.get(&#39;node&#39;);
-
-    if(destroyed){
-        return;
+      preData = _self.get(&#39;data&#39;),
+      parent = _self.get(&#39;parent&#39;);
+    if(data != preData){
+      _self.set(&#39;data&#39;,data);
     }
-    el.remove &amp;&amp; el.remove();
-    _self._attrs = {};
-    _self.events = {};
-    _self.set(&#39;destroyed&#39;,true);
-  }
+    if(redraw){
+      if(parent){
+        parent.repaint();
+      }else if(_self.get(&#39;visible&#39;)){
+        _self.repaint();
+      }
+    }
+  },
+<span id='Chart-Series-method-addPoint'>  /**
+</span>   * 添加数据
+   * @param {*} point  数据
+   * @param {Boolean} shift  是否删除最前面的数据
+   * @param {Boolean} redraw 是否重绘图表
+   */
+  addPoint : function(point,shift,redraw){
+    var _self = this,
+      data = _self.get(&#39;data&#39;);
+    data.push(point);
+    
+    if(shift){
+      data.shift();
+      redraw &amp;&amp; data.unshift(data[0]);
+    }
+    _self.changeData(data,redraw);
 
+    if(shift){
+      setTimeout(function(){
+        data.shift();
+        _self.set(&#39;points&#39;,null);
+        if(redraw){
+          _self.shiftPoint();
+          _self.changeShapes(_self.getPoints(),false);
+        }
+      },800);
+      
+    }
+  },
+<span id='Chart-Series-method-shiftPoint'>  /**
+</span>   * 删除第一个节点的操作
+   * @protected
+   */
+  shiftPoint : function(){
+    var _self = this,
+      markersGroup = _self.get(&#39;markersGroup&#39;),
+      labelsGroup = _self.get(&#39;labelsGroup&#39;),
+      xAxis = _self.get(&#39;xAxis&#39;),
+      first;
+    if(markersGroup){
+      first =markersGroup.getChildAt(0);
+      first &amp;&amp; first.remove();
+    }
+    if(labelsGroup){
+      first = labelsGroup.getChildAt(0);
+      first &amp;&amp; first.remove();
+    }
+    if(xAxis){
+      var labels = xAxis.get(&#39;labelsGroup&#39;);
+      if(labels){
+        first = labels.getChildAt(0);
+        first &amp;&amp; first.remove();
+      }
+    }/**/
+  },
+<span id='Chart-Series-method-getData'>  /**
+</span>   * 获取对应坐标轴上的数据
+   * @return {Array} 
+   */
+  getData : function(type){
+
+  },
+<span id='Chart-Series-method-onMouseOver'>  /**
+</span>   * @protected
+   * 鼠标进入事件
+   */
+  onMouseOver : function(ev){
+    
+  },
+<span id='Chart-Series-method-onMouseOut'>  /**
+</span>   * @protected
+   * 鼠标移出
+   */
+  onMouseOut : function(ev){
+
+  },
+<span id='Chart-Series-method-onStickyTracking'>  /**
+</span>   * 鼠标在画布上移动
+   */
+  onStickyTracking : function(ev){
+
+  },
+<span id='Chart-Series-method-processColor'>  /**
+</span>   * @protected
+   * 处理颜色
+   */
+  processColor : function(){
+
+  },
+<span id='Chart-Series-method-getTrackingInfo'>  /**
+</span>   * 获取鼠标移动与该series的焦点
+   */
+  getTrackingInfo : function(point){
+
+  },
+<span id='Chart-Series-method-getPoints'>  /**
+</span>   * 获取点的集合用于显示Marker和label
+   * @return {Array} 点的集合
+   */
+  getPoints : function(){
+    var _self = this,
+      points = _self.get(&#39;points&#39;);
+    if(!points){
+      points = _self._getPoints();
+      _self.set(&#39;points&#39;,points);
+    }
+    return points;
+  },
+<span id='Chart-Series-method-_getPoints'>  /**
+</span>   * @private
+   * 获取点
+   */
+  _getPoints : function(){
+    var _self = this,
+      data = _self.get(&#39;data&#39;),
+      xField = _self.get(&#39;xField&#39;),
+      yField = _self.get(&#39;yField&#39;),
+      points = [];
+    Util.each(data,function(item,index){
+      var point;
+      if(Util.isObject(item)){
+        var xValue = item[xField],
+          yValue = item[yField];
+        if(xValue == null){
+          point = _self.getPointByIndex(yValue,index);
+        }else{
+          point = _self.getPointByValue(xValue,yValue);
+        }
+        point.obj = item;
+      }else if(Util.isArray(item)){
+        point = _self.getPointByValue(item[0],item[1]);
+        point.arr = item;
+      }else{
+        point = _self.getPointByIndex(item,index);
+      }
+      _self.processPoint(point,index);
+      points.push(point);
+    });
+
+    return points;
+  },
+<span id='Chart-Series-method-processPoint'>  /**
+</span>   * @protected
+   * 处理节点，并且添加附加信息
+   */
+  processPoint : function(point,index){
+
+  },
+<span id='Chart-Series-method-getPointByObject'>  /**
+</span>   * 根据对象获取值
+   * @protected
+   * @return {Object} 点的信息
+   */
+  getPointByObject : function(item){
+
+  },
+<span id='Chart-Series-method-getPointByIndex'>  /**
+</span>   * 根据索引获取值
+   * @protected
+   * @return {Object} 点的信息
+   */
+  getPointByIndex : function(item,index){
+
+  },
+<span id='Chart-Series-method-getPointByValue'>  /**
+</span>   * @protected
+   * 根据指定的值获取点的信息
+   * @param  {Number} value 在基础轴上的值，一般是x轴
+   * @return {Object} 点的信息
+   */
+  getPointByValue : function(xValue,value){
+
+  },
+<span id='Chart-Series-method-getTipItem'>  /**
+</span>   * 获取提示信息
+   * @return {*} 返回显示在上面的文本
+   */
+  getTipItem : function(point){
+    return point.value;
+  },
+  //根据x轴上的值获取y轴上的值
+  findPointByValue : function(value){
+    var _self = this,
+      points = _self.get(&#39;points&#39;),
+      rst,
+      last;
+
+    Util.each(points,function(point,index){
+
+      if(_self.snapEqual(point.xValue,value) &amp;&amp; point.value != null){
+        rst = point;
+        return false;
+      }else if(Util.isNumber(value) &amp;&amp; point.xValue &lt; value ){
+        last = point;
+        next = points[index + 1];
+      }
+    });
+    if(last &amp;&amp; next){ //计算最逼近的
+      if(Math.abs(last.xValue - value) &gt; Math.abs(next.xValue - value)){
+        last = next;
+      }
+    }
+    return rst || last;
+  },
+<span id='Chart-Series-method-snapEqual'>  /**
+</span>   * @protected
+   * 判断是否近似相等
+   */
+  snapEqual : function(value1,value2){
+    return value1 == value2;
+  },
+<span id='Chart-Series-method-draw'>  /**
+</span>   * @protected
+   * 画对应的图形
+   */
+  draw : function(points){
+
+  },
+<span id='Chart-Series-method-paint'>  /**
+</span>   * 绘制数据序列
+   */
+  paint : function(){
+    var _self = this,
+      points = _self.getPoints();
+
+    if(_self.get(&#39;isPaint&#39;) || !_self.get(&#39;data&#39;).length){ //没有数据时不做渲染
+      return;
+    }
+    _self.set(&#39;painting&#39;,true);//正在绘制，防止再绘制过程中触发重绘
+    _self.draw(points,function(){
+      _self.sort();
+    });
+    _self.set(&#39;isPaint&#39;,true);
+    _self.set(&#39;painting&#39;,false);
+  },
+<span id='Chart-Series-method-repaint'>  /**
+</span>   * 重绘
+   */
+  repaint : function(){
+    var _self = this,
+      labels = _self.get(&#39;labels&#39;),
+      markers = _self.get(&#39;markers&#39;),
+      points;
+
+    _self.set(&#39;points&#39;,null);
+    if(!_self.get(&#39;isPaint&#39;) &amp;&amp; !_self.get(&#39;painting&#39;)){
+      _self.paint();
+      return;
+    }
+
+    
+    points = _self.getPoints();
+
+    if(labels){
+      labels.items = [];
+    }
+    if(markers){
+      markers.items = [];
+    }
+    _self.changeShapes(points);
+    Util.each(points,function(point){
+      if(labels){
+        var item = {};
+        item.text = point.value;
+        item.x = point.x;
+        item.y = point.y;
+        labels.items.push(item);
+      }
+      if(markers){
+        markers.items.push(point);
+      }
+    });
+
+    _self._changeMarkers();
+    _self._changeLabels();
+  },
+<span id='Chart-Series-method-changeShapes'>  /**
+</span>   * @protected
+   * 序列变化时改变内部图形
+   */
+  changeShapes : function(points){
+
+  },
+<span id='Chart-Series-method-addMarker'>  /**
+</span>   * @protected
+   * 添加marker配置项
+   */
+  addMarker : function(offset){
+    var _self = this,
+        markersGroup = _self.get(&#39;markersGroup&#39;),
+        marker = {},
+        rst;
+    if(markersGroup){
+      marker.x = offset.x;
+      marker.y = offset.y;
+      if(offset.obj &amp;&amp; offset.obj.marker){
+        Util.mix(marker,offset.obj.marker);
+      }
+
+     rst = markersGroup.addMarker(marker);
+     rst.set(&#39;point&#39;,offset);
+    }
+    return rst;
+  },
+  //渲染标记
+  renderMarkers : function(){
+    var _self = this,
+      markers = _self.get(&#39;markers&#39;),
+      markersGroup;
+    if(markers){
+      var cfg = Util.mix({},markers);
+      cfg.invert = _self.get(&#39;invert&#39;);
+      markersGroup = _self.addGroup(Markers,cfg);
+      _self.set(&#39;markersGroup&#39;,markersGroup);
+    }
+  },
+  _changeMarkers : function(){
+    var _self = this,
+      markers = _self.get(&#39;markers&#39;),
+      markersGroup;
+    if(markers){
+      markersGroup = _self.get(&#39;markersGroup&#39;);
+      markersGroup.change(markers.items);
+    }
+  },
+  _changeLabels : function(){
+    this.resetLabels();
+  },
+  //删除标记
+  removeMarkers : function(){
+    var _self = this,
+
+      markersGroup = _self.get(&#39;markersGroup&#39;);
+
+    markersGroup &amp;&amp; markersGroup.remove();
+  },
+  //获取激活的属性
+  getActiveAtrrs : function(){
+
+  },
+  //获取解除激活的属性
+  getUnActiveAttrs : function(){
+
+  },
+<span id='Chart-Series-method-setActiveStatus'>  /**
+</span>   * @protected
+   * 设置图形的激活状态
+   * @param {Boolean} actived 是否激活
+   */
+  setActiveStatus : function(actived){
+
+  },
+  remove : function(){
+    var _self = this;
+    _self.removeMarkers();
+    _self.removeLabels();
+    Series.superclass.remove.call(this);
+  }
 });
-  
-module.exports = Base;
+
+
+module.exports = Series;
 </pre>
 </body>
 </html>

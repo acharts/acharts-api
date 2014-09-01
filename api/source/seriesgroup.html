@@ -21,13 +21,13 @@
  */
 
 
-var Util = require(&#39;../util&#39;),
-  ActivedGroup = require(&#39;./mixin/activedgroup&#39;),
-  PlotItem = require(&#39;./plotitem&#39;),
-  Legend = require(&#39;./legend&#39;),
-  Tooltip = require(&#39;./tooltip&#39;),
-  Axis = require(&#39;./axis/index&#39;),
-  Series = require(&#39;./series/index&#39;),
+var Util = require(&#39;achart-util&#39;),
+  ActivedGroup = require(&#39;achart-actived&#39;).Group,
+  PlotItem = require(&#39;achart-plot&#39;).Item,
+  Legend = require(&#39;achart-legend&#39;),
+  Tooltip = require(&#39;achart-tooltip&#39;),
+  Axis = require(&#39;achart-axis&#39;),
+  Series = require(&#39;achart-series&#39;),
   maxPixel = 120, //坐标轴上的最大间距
   minPixel = 80; //坐标轴上最小间距
 
@@ -830,11 +830,11 @@ Util.augment(Group,{
     });
 
   },
-<span id='Chart-SeriesGroup-method-showSeries'>  /**
+<span id='Chart-SeriesGroup-method-showChild'>  /**
 </span>   * 显示series
    * @param  {Chart.Series} series 数据序列对象
    */
-  showSeries : function(series){
+  showChild : function(series){
     var _self = this,
       yAxis = _self.get(&#39;yAxis&#39;);
     if(!series.get(&#39;visible&#39;)){
@@ -845,11 +845,11 @@ Util.augment(Group,{
       }
     }
   },
-<span id='Chart-SeriesGroup-method-hideSeries'>  /**
+<span id='Chart-SeriesGroup-method-hideChild'>  /**
 </span>   * 隐藏series
    * @param  {Chart.Series} series 数据序列对象
    */
-  hideSeries : function(series){
+  hideChild : function(series){
     var _self = this,
       yAxis = _self.get(&#39;yAxis&#39;);
     if(series.get(&#39;visible&#39;)){
@@ -862,9 +862,17 @@ Util.augment(Group,{
   },
   _addLegendItem : function(series){
     var _self = this,
-      legendGroup = _self.get(&#39;legendGroup&#39;);
+      legendGroup = _self.get(&#39;legendGroup&#39;),
+      markers = series.get(&#39;markers&#39;);
+
+    var symbol = markers &amp;&amp; markers.marker.symbol;
+
     legendGroup &amp;&amp; legendGroup.addItem({
-      series : series
+      color : series.get(&#39;color&#39;),
+      name : series.get(&#39;name&#39;),
+      type : series.get(&#39;legendType&#39;),
+      symbol : symbol,
+      item : series
     });
   },
   //获取序列的配置信息

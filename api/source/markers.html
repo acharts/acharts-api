@@ -22,9 +22,9 @@
 
 
 var 
-	Util = require(&#39;../util&#39;),
-	Group = require(&#39;./mixin/activedgroup&#39;),
-	PlotItem = require(&#39;./plotitem&#39;);
+	Util = require(&#39;achart-util&#39;),
+	Group = require(&#39;achart-actived&#39;).Group,
+	PlotItem = require(&#39;achart-plot&#39;).Item;
 
 	
 
@@ -162,11 +162,14 @@ Util.augment(Markers,{
 			items = _self.get(&#39;items&#39;);
 
 		if(single){
-			items = [{x : 0 ,y : 0,visible:false}];
+			var marker = _self._addMarker({x : 0 ,y : 0});
+			marker.hide();
+		}else{
+			Util.each(items,function(item){
+				_self._addMarker(item)
+			});
 		}
-		Util.each(items,function(item){
-			_self._addMarker(item)
-		});
+		
 	},
 <span id='Chart-Markers-method-addMarker'>	/**
 </span>	 * 添加marker
@@ -211,7 +214,6 @@ Util.augment(Markers,{
 				}
 			});
 		}else{
-
 			var	tmp = [].concat(xCache).sort(function(v1,v2){return v1-v2;}),
 				snap = Util.snapTo(tmp,point,tolerance),
 			index = Util.indexOf(xCache,snap);

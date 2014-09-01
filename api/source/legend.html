@@ -20,8 +20,8 @@
  * @ignore
  */
 
-var Util = require(&#39;../util&#39;),
-  PlotItem = require(&#39;./plotitem&#39;),
+var Util = require(&#39;achart-util&#39;),
+  PlotItem = require(&#39;achart-plot&#39;).Item,
   Item = require(&#39;./legenditem&#39;),
   LINE_HEIGHT = 15,
   PADDING = 5;
@@ -47,10 +47,16 @@ Legend.ATTRS = {
   zIndex : 8,
   elCls : &#39;x-chart-legend&#39;,
 <span id='Chart-Legend-property-items'>  /**
-</span>   * 子项的配置项
+</span>   * 子项的集合
    * @type {Array}
    */
   items : null,
+
+<span id='Chart-Legend-property-itemCfg'>  /**
+</span>   * 子项的配置信息
+   * @type {Object}
+   */
+  itemCfg : null,
 
 <span id='Chart-Legend-property-layout'>  /**
 </span>   * 布局方式： horizontal，vertical
@@ -94,7 +100,7 @@ Util.augment(Legend,{
     _self._renderBorder();    
   },
   bindUI : function(){
-    Legend.superclass.bindUI.call(_self);
+    Legend.superclass.bindUI.call(this);
     var _self = this;
     _self.on(&#39;mousemove&#39;,function(ev){
       if(ev.stopPropagation){
@@ -114,6 +120,9 @@ Util.augment(Legend,{
     Util.each(items,function(item,index){
       _self._addItem(item,index);
     });
+    if(items &amp;&amp; items.length){
+      _self.resetPosition();
+    }
   },
 <span id='Chart-Legend-method-addItem'>  /**
 </span>   * 添加图例
@@ -133,7 +142,8 @@ Util.augment(Legend,{
       itemsGroup = _self.get(&#39;itemsGroup&#39;),
       x = _self._getNextX(),
       y = _self._getNextY(),
-      cfg = Util.mix({x : x,y : y},item);
+      itemCfg = _self.get(&#39;itemCfg&#39;),
+      cfg = Util.mix({x : x,y : y},item,itemCfg);
 
     cfg.legend = _self;
     itemsGroup.addGroup(Item,cfg);

@@ -4,7 +4,23 @@
 "--external":"window,HTMLDocument,HTMLElement,DocumentFragment,XMLHttpRequest,jQuery",
 "--":[
 	//"../../../bui/src/common/util.js",
-        "../../../acharts/src",
+        
+        "../../../achart-canvas/src",
+        "../../../achart-axis/src",
+        "../../../achart-actived/src",
+        "../../../achart-plot/src",
+        "../../../achart-date/src",
+        "../../../achart-labels/src",
+        "../../../achart-legend/src",
+        "../../../achart-markers/src",
+        "../../../achart-series/src",
+        "../../../achart-series-other/src",
+        "../../../achart-stock/src",
+        "../../../achart-theme/src",
+        "../../../achart-tooltip/src",
+        "../../../achart-util/src",
+        "../../../acharts/src"
+
 	
     ]
 }

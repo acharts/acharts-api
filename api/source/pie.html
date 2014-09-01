@@ -22,8 +22,8 @@
 
 var 
   ItemGroup = require(&#39;./itemgroup&#39;),
-  ActiveGroup = require(&#39;../mixin/activedgroup&#39;),
-  Util = require(&#39;../../util&#39;),
+  ActiveGroup = require(&#39;achart-actived&#39;).Group,
+  Util = require(&#39;achart-util&#39;),
   Base = require(&#39;./base&#39;);
 
 //决定x坐标
@@ -225,6 +225,10 @@ Pie.ATTRS = {
   labelHeight : 16,
 
   labelLine : true,
+
+  item : {
+    &#39;stroke&#39;: &#39;#fff&#39;
+  },
   
   xField : &#39;name&#39;,
   stickyTracking : false,

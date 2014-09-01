@@ -16,7 +16,7 @@
 </head>
 <body onload="prettyPrint(); highlight();">
   <pre class="prettyprint lang-js">
-var Raphael = require(&#39;./raphael/index&#39;),
+var Raphael = require(&#39;achart-raphael&#39;),
   STEP_MS = 16,//16毫秒一个step
   HANDLERS = {
 
@@ -52,8 +52,11 @@ function ceiling(values,value){
   var length = values.length,
     pre = values[0],
     rst;
-  if(value &lt; values[0] || value &gt; values[length - 1]){
+  if(value &gt; values[length - 1]){
     return NAN;
+  }
+  if(value &lt; values[0]){
+    return values[0];
   }
 
   for (var i = 1; i &lt; values.length; i++) {
@@ -928,6 +931,7 @@ Util.mix(Util,{
 });
 
 module.exports = Util;
+
 </pre>
 </body>
 </html>

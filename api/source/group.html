@@ -18,9 +18,9 @@
   <pre class="prettyprint lang-js">
 var Container = require(&#39;./container&#39;),
   Item = require(&#39;./canvasitem&#39;),
-  Util = require(&#39;../util&#39;),
+  Util = require(&#39;achart-util&#39;),
   Shape = require(&#39;./shape&#39;);
-  require(&#39;../raphael/group&#39;);
+  require(&#39;./raphealgroup&#39;);
 
 <span id='Chart-Canvas-Group'>/**
 </span> * @class Chart.Canvas.Group
@@ -72,9 +72,6 @@ Util.augment(Group,{
     node = el.node;
     node.group = _self;
     _self.set(&#39;node&#39;,node);
-    /*if(this.get(&#39;visible&#39;) == false){
-      el.hide();
-    }*/
     _self._initTranslate();
   },
   //初始化平移
@@ -172,7 +169,6 @@ Util.augment(Group,{
     }
     _self.set(&#39;x&#39;,params.x);
     _self.set(&#39;y&#39;,params.y);
-    //_self._vmlAnimate(params,ms,callback);
   },
   
 <span id='Chart-Canvas-Group-method-move'>  /**

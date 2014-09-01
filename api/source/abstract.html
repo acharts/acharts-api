@@ -21,13 +21,12 @@
  */
 
   
-var 
-  Item = require(&#39;../plotitem&#39;),
+var Item = require(&#39;achart-plot&#39;).Item,
   Grid = require(&#39;./grid&#39;),
-  Util = require(&#39;../../util&#39;),
-  ShowLabels = require(&#39;../mixin/showlabels&#39;),
+  Util = require(&#39;achart-util&#39;),
+  ShowLabels = require(&#39;achart-labels&#39;).ShowLabels,
   CLS_AXIS = &#39;x-chart-axis&#39;;
-
+  
 <span id='Chart-Axis-Abstract'>/**
 </span> * @class Chart.Axis.Abstract
  * 抽象的坐标轴类
@@ -74,6 +73,11 @@ Abstract.ATTRS = {
    * @type {Object}
    */
   autoPaint : true,
+<span id='Chart-Axis-Abstract-property-animate'>  /**
+</span>   * 坐标轴相关的动画，可以一起控制对应的labels,grid，tick的动画
+   * @type {Boolean}
+   */
+  animate : true,
 <span id='Chart-Axis-Abstract-property-formatter'>  /**
 </span>   * 格式化坐标轴上的节点
    * @type {Function}
@@ -129,6 +133,10 @@ Util.augment(Abstract,{
           plotRange;
       if(!grid){
           return;
+      }
+
+      if(grid.animate == null){
+        grid.animate = _self.get(&#39;animate&#39;);
       }
       gridGroup = _self.get(&#39;parent&#39;).addGroup(Grid,grid);
       _self.set(&#39;gridGroup&#39;,gridGroup);

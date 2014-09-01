@@ -20,8 +20,8 @@
  * @ignore
  */
 
-var Util = require(&#39;../../util&#39;),
-	Labels = require(&#39;../labels&#39;);
+var Util = require(&#39;achart-util&#39;),
+	Labels = require(&#39;./labels&#39;);
 
 function removeLabel(label){
   if(label.remove){
@@ -64,9 +64,9 @@ Util.augment(ShowLabels,{
     if(!labels.items){
     	labels.items = [];
     }
-
-    /*labels.x = _self.get(&#39;x&#39;);
-    labels.y = _self.get(&#39;y&#39;);*/
+    if(labels.animate == null){
+      labels.animate = _self.get(&#39;animate&#39;);
+    }
 
     labelsGroup = _self.addGroup(Labels,labels);
     _self.set(&#39;labelsGroup&#39;,labelsGroup);
@@ -128,6 +128,7 @@ Util.augment(ShowLabels,{
   	var _self = this,
   		labelsGroup = _self.get(&#39;labelsGroup&#39;);
   	labelsGroup &amp;&amp; labelsGroup.remove();
+    _self.set(&#39;labelsGroup&#39;,null);
   }
 })
 
