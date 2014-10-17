@@ -39,6 +39,10 @@ function isBetween(x,x1,x2){
 <span id='Chart-Axis'>/**
 </span> * @class Chart.Axis
  * 坐标轴
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/wiki/&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @extends Chart.Axis.Abstract
  */
 function Axis(cfg){
@@ -106,6 +110,27 @@ Axis.ATTRS = {
         value : 5
     }
    
+<span id='Chart-Axis-event-beforechange'>    /**
+</span>     * @event beforechange
+     * 坐标轴变化前
+     * @param {Object} ev 事件对象
+     * @param {Object} ev.info 变化的信息
+     */
+    
+<span id='Chart-Axis-event-afterchange'>    /**
+</span>     * @event afterchange
+     * 坐标轴变化后
+     */
+    
+<span id='Chart-Axis-event-beforepaint'>    /**
+</span>    * @event beforepaint
+    * 坐标轴开始渲染,仅第一次渲染时
+    */
+
+<span id='Chart-Axis-event-afterpaint'>    /**
+</span>    * @event afterpaint
+    * 坐标轴渲染完成,仅第一次渲染时
+    */
 
 };
 
@@ -128,7 +153,6 @@ Util.augment(Axis,{
             _self.set(&#39;orthoEnd&#39;,_self._getOrthoEnd());
         }
         
-
         _self.set(&#39;indexCache&#39;,{});
         _self.set(&#39;pointCache&#39;,[]);
 
@@ -178,6 +202,7 @@ Util.augment(Axis,{
     change : function(info){
         var _self = this;
         if(_self.isChange(info.ticks)){
+            _self.fire(&#39;beforechange&#39;,{info : info});
             _self._resetRange();
             _self._clearTicksInfo();
             _self.changeInfo(info);
@@ -186,6 +211,8 @@ Util.augment(Axis,{
             _self._changeTicks();
             _self._changeGrid();
             _self.resetLabels();
+
+            _self.fire(&#39;afterchange&#39;);
         }
     },
     _resetRange : function(){
@@ -254,9 +281,11 @@ Util.augment(Axis,{
      */
     paint : function(){
         var _self = this;
+        _self.fire(&#39;beforepaint&#39;);
         _self._drawLines();
         _self._renderTicks();
         _self._renderGrid(); 
+        _self.fire(&#39;afterpaint&#39;);
     },
 
     _changeLine : function(){

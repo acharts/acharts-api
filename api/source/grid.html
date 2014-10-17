@@ -48,10 +48,13 @@ function lines2path(lines,attrs){
 }
 
 
-<span id='Chart-Grid'>/**
-</span> * @class Chart.Grid
+<span id='Chart-Axis-Grid'>/**
+</span> * @class Chart.Axis.Grid
  * 背景栅格
- * @extends Chart.PlotItem
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/api/grid.html&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *    
+ * @extends Chart.Plot.Item
  */
 function Grid(cfg){
 	Grid.superclass.constructor.call(this,cfg);
@@ -62,7 +65,7 @@ Util.extend(Grid,Item);
 Grid.ATTRS = {
 	zIndex : 1,
 	elCls : CLS_GRID,
-<span id='Chart-Grid-property-type'>	/**
+<span id='Chart-Axis-Grid-property-type'>	/**
 </span>	 * 如果栅格线由多个点构成，线的类型
 	 *
 	 *  - line 不封闭的线
@@ -71,42 +74,42 @@ Grid.ATTRS = {
 	 * @type {String}
 	 */
 	type : &#39;line&#39;,
-<span id='Chart-Grid-property-line'>	/**
+<span id='Chart-Axis-Grid-property-line'>	/**
 </span>	 * 线的样式配置
 	 * @type {Object}
 	 */
 	line : null,
-<span id='Chart-Grid-property-minorLine'>	/**
+<span id='Chart-Axis-Grid-property-minorLine'>	/**
 </span>	 * 次要线的配置项
 	 * @type {Number}
 	 */
 	minorLine : null,
-<span id='Chart-Grid-property-minorCount'>	/**
+<span id='Chart-Axis-Grid-property-minorCount'>	/**
 </span>	 * 2个Grid线中间的次要线的数目
 	 * @type {Number}
 	 */
 	minorCount : 0,
-<span id='Chart-Grid-property-renderer'>	/**
+<span id='Chart-Axis-Grid-property-renderer'>	/**
 </span>	 * 渲染函数，使用此函数时，将阻止默认线的生成
 	 * @type {Function}
 	 */
 	renderer : null,
-<span id='Chart-Grid-property-items'>  /**
+<span id='Chart-Axis-Grid-property-items'>  /**
 </span>   * 线集合的配置
    * @type {Array}
    */
   items : null,
-<span id='Chart-Grid-property-odd'>  /**
+<span id='Chart-Axis-Grid-property-odd'>  /**
 </span>   * 栅格内部的奇数背景配置
    * @type {Object}
    */
   odd : null,
-<span id='Chart-Grid-property-even'>  /**
+<span id='Chart-Axis-Grid-property-even'>  /**
 </span>   * 栅格内部的偶数背景配置
    * @type {Object}
    */
   even : null,
-<span id='Chart-Grid-property-animate'>  /**
+<span id='Chart-Axis-Grid-property-animate'>  /**
 </span>   * 发生改变时是否触发动画
    * @type {Boolean}
    */
@@ -161,7 +164,7 @@ Util.augment(Grid,{
 				preItem = item;
 		});
 	},
-<span id='Chart-Grid-method-change'>	/**
+<span id='Chart-Axis-Grid-method-change'>	/**
 </span>	 * 栅格改变
 	 * @param  {Array} items 栅格点的坐标
 	 */

@@ -51,6 +51,10 @@ function pathArray(arr,invert){
 <span id='Chart-Series-Area'>/**
 </span> * @class Chart.Series.Area
  * 区域图的数据序列
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/#area&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/04-area.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @extends Chart.Series.Line
  */
 var Area = function(cfg){
@@ -58,7 +62,7 @@ var Area = function(cfg){
 };
 
 Area.ATTRS = {
-
+  elCls : &#39;x-chart-area-series&#39;,
 <span id='Chart-Series-Area-property-area'>  /**
 </span>   * 区域的配置信息
    * @type {Object}
@@ -87,9 +91,11 @@ Util.augment(Area,{
     var _self = this,
       canvas = _self.get(&#39;canvas&#39;),
       markersGroup = _self.get(&#39;markersGroup&#39;);
-    if(markersGroup &amp;&amp; _self.isStacked()){
-      canvas.get(&#39;node&#39;).appendChild(markersGroup.get(&#39;node&#39;));  
-    }
+    _self.on(&#39;afterpaint&#39;,function(){
+      if(markersGroup &amp;&amp; _self.isStacked()){
+        canvas.get(&#39;node&#39;).appendChild(markersGroup.get(&#39;node&#39;));  
+      }
+    });
   },
   //覆盖隐藏方法，同时隐藏markers
   hide : function(){

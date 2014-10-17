@@ -24,6 +24,7 @@ var
   ItemGroup = require(&#39;./itemgroup&#39;),
   ActiveGroup = require(&#39;achart-actived&#39;).Group,
   Util = require(&#39;achart-util&#39;),
+  Legend = require(&#39;achart-legend&#39;),
   Base = require(&#39;./base&#39;);
 
 //决定x坐标
@@ -70,10 +71,10 @@ function resetItem(item,h,endAngle,r,center,isStart,lineHeight){
       //增加5像素，用于连接线
       item.x = center.x + (r + 5) * Math.cos(item.angle * RAD);
       item.y = center.y + (r + 5) * Math.sin(item.angle * RAD);
-      if(innerAngle == 0){
+      //if(innerAngle == 0){
         //item.y = item.y - lineHeight;
-        item[&quot;text-anchor&quot;] = &quot;middle&quot;;
-      }
+        //item[&quot;text-anchor&quot;] = &quot;middle&quot;;
+      //}
 }
 
 function alignLables(center,r,arr,endAngle,factor,lineHeight){
@@ -164,8 +165,13 @@ var RAD = Math.PI / 180,
 <span id='Chart-Series-Pie'>/**
 </span> * @class Chart.Series.Pie
  * 饼图数据序列
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/#pie&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/06-pie.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
  * @extends Chart.Series
  * @mixins Chart.Series.ItemGroup
+ * @mixins Chart.Actived.Group
  */
 var Pie = function(cfg){
   Pie.superclass.constructor.call(this,cfg);
@@ -224,11 +230,17 @@ Pie.ATTRS = {
    */
   labelHeight : 16,
 
+<span id='Chart-Series-Pie-property-labelLine'>  /**
+</span>   * 是否显示文本的连接线
+   * @type {Boolean}
+   */
   labelLine : true,
 
   item : {
     &#39;stroke&#39;: &#39;#fff&#39;
   },
+
+  cancelSelect : true,
   
   xField : &#39;name&#39;,
   stickyTracking : false,
@@ -238,7 +250,7 @@ Pie.ATTRS = {
 
 Util.extend(Pie,Base);
 
-Util.mixin(Pie,[ItemGroup,ActiveGroup]);
+Util.mixin(Pie,[ItemGroup,ActiveGroup,Legend.UseLegend]);
 
 Util.augment(Pie,{
 
@@ -268,6 +280,10 @@ Util.augment(Pie,{
         _self.setSelected(selectedPoint);
       }
     }
+    if(!this.get(&#39;legedGroup&#39;)){
+      this.renderLegend();  
+    }
+   
   },
 <span id='Chart-Series-Pie-method-changeShapes'>  /**
 </span>   * @protected
@@ -275,13 +291,28 @@ Util.augment(Pie,{
    */
   changeShapes : function(points,animate){
     var _self = this;
-
+    this.set(&#39;visiblePoints&#39;,null);
+    //
     Util.each(points,function(point,index){
       _self.formatPoint(point,index);
     });
-
+    this.clearSelected();
     _self.changePoints(points);
 
+  },
+  changeData : function(data,redraw){
+    var _self = this,
+    curanimate = _self.get(&#39;animate&#39;);
+    if(redraw){
+      _self.get(&#39;group&#39;).clear();
+      _self.set(&#39;animate&#39;,false);
+    }
+   
+    Pie.superclass.changeData.call(this,data,redraw);
+    if(redraw &amp;&amp; _self.get(&#39;legend&#39;)){
+      _self.resetLegendItems();
+      _self.set(&#39;animate&#39;,curanimate);
+    }
   },
   //处理labels
   processLabels : function(points){
@@ -299,16 +330,19 @@ Util.augment(Pie,{
       rightArray = [];
 
     Util.each(points,function(point){
-      var cfg = _self._getLabelCfg(point,distance,rAppend);
-      if(distance &lt; 0){
-        labelsGroup.addLabel(cfg);
-      }else{
-        if(cfg.factor &gt; 0){
-          rightArray.push(cfg);
+      if(point.visible){
+        var cfg = _self._getLabelCfg(point,distance,rAppend);
+        if(distance &lt; 0){
+          labelsGroup.addLabel(cfg);
         }else{
-          leftArray.push(cfg);
+          if(cfg.factor &gt; 0){
+            rightArray.push(cfg);
+          }else{
+            leftArray.push(cfg);
+          }
         }
       }
+      
     });
     if(leftArray.length){
       var end;
@@ -332,6 +366,23 @@ Util.augment(Pie,{
       });
     }
     
+  },
+  //覆写 getLengendItems 方法
+  getLengendItems : function(){
+    var _self = this,
+      children = _self.getItems(),
+      items = [];
+    Util.each(children,function(child,i){
+      var item = {
+        name : child.get(&#39;point&#39;).xValue,
+        color : child.attr(&#39;fill&#39;),
+        type : &#39;rect&#39;,
+        item : child
+      };
+      items.push(item);
+    });
+
+    return items;
   },
 <span id='Chart-Series-Pie-method-resetLabels'>  /**
 </span>   * 设置labels
@@ -388,7 +439,7 @@ Util.augment(Pie,{
   },
  
   //鼠标移动
-  onMouseOver : function(){
+  bindMouseOver : function(){
     var _self = this;
 
     _self.on(&#39;mouseover&#39;,function(ev){
@@ -562,11 +613,22 @@ Util.augment(Pie,{
   formatPoint : function(point,index){
     var _self = this,
       points = _self.getVisiblePoints(),
-      percent = _self._getPiePercent(point,points),
+      visible = false;
+    Util.each(points,function(item){
+      if(point.xValue == item.xValue){
+        visible = true;
+      }
+    });
+    point.visible = visible;
+    if(!visible){
+      return;
+    }
+    var  percent = _self._getPiePercent(point,points),
       startAngle = _self.get(&#39;startAngle&#39;),
       endAngle = _self.get(&#39;endAngle&#39;),
       totalAngle = endAngle - startAngle,
       rst = {};
+
     point.percent = percent.percent;
     if(point.obj &amp;&amp; point.obj.attrs){
       point.color = point.obj.attrs.fill;
@@ -588,13 +650,23 @@ Util.augment(Pie,{
     var _self = this,
       total = 0,
       pre = 0,
-      curIndex = Util.indexOf(points,point),
+      curIndex = null,
       rst = {};
-    Util.each(points,function(point,index){
-      if(index &lt; curIndex){
-        pre += point.value;
+
+    Util.each(points,function(item,index){
+      if(point.xValue == item.xValue){
+        curIndex = index;
       }
-      total += point.value;
+    });
+
+    Util.each(points,function(item,index){
+      //if(item.visible){
+        if(index &lt; curIndex){
+          pre += item.value;
+        }
+        total += item.value;
+      //}
+      
     });
 
     rst.percent = point.value / total;
@@ -603,20 +675,21 @@ Util.augment(Pie,{
   },
   getVisiblePoints : function(){
     var _self = this,
-      visiblePoints;
+      visiblePoints,
+      points = [],
+      items = _self.getItems();;
 
-    return _self.getPoints();
+    
     //未渲染，则调用初始化时的点信息
-    /*if(!_self.get(&#39;isPaint&#39;)){
-      
+    if(!_self.get(&#39;isPaint&#39;) || items.length == 0){
+      return _self.getPoints();
     }
 
     visiblePoints = _self.get(&#39;visiblePoints&#39;);
     if(visiblePoints){
       return visiblePoints;
     }
-    var points = [],
-      items = _self.getItems();
+    
     Util.each(items,function(item){
       if(item.get(&#39;visible&#39;)){
         points.push(item.get(&#39;point&#39;));
@@ -624,13 +697,14 @@ Util.augment(Pie,{
     });
     _self.set(&#39;visiblePoints&#39;,points);
     return points;
-    */
+    /**/
   },
 <span id='Chart-Series-Pie-method-animateItem'>  /**
 </span>   * 执行单个点的动画
    * @protected
    */
   animateItem : function(item,prePoint){
+
     var _self = this,
       curPoint = item.get(&#39;point&#39;),
       startAngle = curPoint.startAngle,
@@ -734,10 +808,6 @@ Util.augment(Pie,{
         path.push([&#39;z&#39;]);
       }
 
-      
-
-
-
     }
     return path;
   },
@@ -784,6 +854,19 @@ Util.augment(Pie,{
       },duration);
     }
     item.set(&#39;selected&#39;,selected);
+  },
+  showChild : function(item){
+    Pie.superclass.showChild.call(this,item);
+    this.repaint();
+  },
+  hideChild : function(item){
+    Pie.superclass.hideChild.call(this,item);
+    this.repaint();
+  },
+  //覆写清空
+  remove : function(){
+    this.removeLegend();
+    AGroup.superclass.remove.call(this);
   }
 });
 

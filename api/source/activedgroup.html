@@ -21,10 +21,12 @@
  */
 
 var Util = require(&#39;achart-util&#39;);
-<span id='Chart-ActivedGroup'>/**
-</span> * @class Chart.ActivedGroup
+<span id='Chart-Actived-Group'>/**
+</span> * @class Chart.Actived.Group
  * @protected
  * 元素可以激活的容器扩展
+ *
+ *  - [使用文档](http://spmjs.io/docs/achart-actived/wiki/group.html)
  */
 var Group = function(){
 
@@ -32,11 +34,25 @@ var Group = function(){
 
 Group.ATTRS = {
 	
+<span id='Chart-Actived-Group-event-itemactived'>	/**
+</span>	 * @event itemactived
+	 * 选项激活
+	 * @param {Object} ev 事件对象
+	 * @param {Object} ev.item 激活的子项
+	 */
+	
+
+<span id='Chart-Actived-Group-event-itemunactived'>	/**
+</span>	 * @event itemunactived
+	 * 选项激活
+	 * @param {Object} ev 事件对象
+	 * @param {Object} ev.item 取消激活的子项
+	 */
 };
 
 Util.augment(Group,{
 
-<span id='Chart-ActivedGroup-method-isItemActived'>	/**
+<span id='Chart-Actived-Group-method-isItemActived'>	/**
 </span>	 * @protected
 	 * 是否激活
 	 * @param {Chart.Actived} item 可以被激活的元素
@@ -45,7 +61,7 @@ Util.augment(Group,{
 	isItemActived : function(item){
 		return item.isActived();
 	},
-<span id='Chart-ActivedGroup-method-getActiveItems'>	/**
+<span id='Chart-Actived-Group-method-getActiveItems'>	/**
 </span>	 * @protected
 	 * 获取可以被激活的元素
 	 * @return {Chart.Actived[]} 可以被激活的元素集合
@@ -53,7 +69,7 @@ Util.augment(Group,{
 	getActiveItems : function(){
 		return this.get(&#39;children&#39;);
 	},
-<span id='Chart-ActivedGroup-method-setItemActived'>	/**
+<span id='Chart-Actived-Group-method-setItemActived'>	/**
 </span>	 * @protected
 	 * 设置激活状态
 	 * @param {Chart.Actived} item 可以被激活的元素
@@ -67,23 +83,25 @@ Util.augment(Group,{
 		}
 	},
 	
-<span id='Chart-ActivedGroup-method-onActived'>	/**
+<span id='Chart-Actived-Group-method-onActived'>	/**
 </span>	 * @protected
 	 * 触发激活事件
 	 * @param  {Object} item 可激活的子项
 	 */
 	onActived : function(item){
+		this.fire(&#39;itemactived&#39;,{item: item});
 		this.fireUpGroup &amp;&amp; this.fireUpGroup(&#39;actived&#39;,item);
 	},
-<span id='Chart-ActivedGroup-method-onUnActived'>	/**
+<span id='Chart-Actived-Group-method-onUnActived'>	/**
 </span>	 * @protected
 	 * 触发取消激活事件
 	 * @param  {Object} item 可激活的子项
 	 */
 	onUnActived : function(item){
+		this.fire(&#39;itemunactived&#39;,{item: item});
 		this.fireUpGroup &amp;&amp; this.fireUpGroup(&#39;unactived&#39;,item);
 	},
-<span id='Chart-ActivedGroup-method-setActivedItem'>	/**
+<span id='Chart-Actived-Group-method-setActivedItem'>	/**
 </span>	 * 设置激活的元素
 	 * @param {Chart.Actived} item 可以被激活的元素
 	 */
@@ -93,11 +111,11 @@ Util.augment(Group,{
 		_self.clearActivedItem();
 		if(item &amp;&amp; !_self.isItemActived(item)){
 			_self.setItemActived(item,true);
-			_self.onActived();
+			_self.onActived(item);
 		}
 		
 	},
-<span id='Chart-ActivedGroup-method-getActived'>	/**
+<span id='Chart-Actived-Group-method-getActived'>	/**
 </span>	 * 获取激活的元素
 	 * @return {Chart.Actived} 激活的元素
 	 */
@@ -115,7 +133,7 @@ Util.augment(Group,{
 
 		return rst;
 	},
-<span id='Chart-ActivedGroup-method-clearActivedItem'>	/**
+<span id='Chart-Actived-Group-method-clearActivedItem'>	/**
 </span>	 * 清除激活的元素
 	 */
 	clearActivedItem : function(item){

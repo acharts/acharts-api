@@ -25,11 +25,15 @@ var Util = require(&#39;achart-util&#39;),
 	PlotItem = require(&#39;./plotitem&#39;),
 	PlotRange = require(&#39;./plotrange&#39;);
 
-<span id='Chart-PlotBack'>/**
-</span> * @class Chart.PlotBack
+<span id='Chart-Plot-Back'>/**
+</span> * @class Chart.Plot.Back
  * @protected
  * 决定图表的边框、背景
- * @extends Chart.PlotItem
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-plot/#plot-back&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-plot/wiki/back.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
+ * @extends Chart.Plot.Item
  */
 var PlotBack = function(cfg){
 	PlotBack.superclass.constructor.call(this,cfg);
@@ -40,22 +44,22 @@ PlotBack.ATTRS = {
 	elCls : &#39;x-chart-back&#39;,
 	
 	zIndex : 0,
-<span id='Chart-PlotBack-property-margin'>	/**
+<span id='Chart-Plot-Back-property-margin'>	/**
 </span>	 * 边距，来决定绘图范围,如果是一个值那么4个边框都是统一的数字，如果是一个数组，则4个边框分别对应值
 	 * @type {Array|Number}
 	 */
 	margin : 20,
-<span id='Chart-PlotBack-property-plotRange'>	/**
+<span id='Chart-Plot-Back-property-plotRange'>	/**
 </span>	 * 绘图的范围
 	 * @type {Object}
 	 */
 	plotRange : null,
-<span id='Chart-PlotBack-property-background'>	/**
+<span id='Chart-Plot-Back-property-background'>	/**
 </span>	 * 背景
 	 * @type {Object}
 	 */
 	background : null,
-<span id='Chart-PlotBack-property-border'>	/**
+<span id='Chart-Plot-Back-property-border'>	/**
 </span>	 * 最外层边框的配置项
 	 * @type {Object}
 	 */
@@ -76,10 +80,14 @@ Util.augment(PlotBack,{
 		this._renderBorder();
 		this._renderBackground();
 	},
+<span id='Chart-Plot-Back-method-repaint'>	/**
+</span>	 * 重绘背景
+	 */
 	repaint : function(){
 		this._calculateRange();
 		this._renderBorder();
 		this._renderBackground();
+		return this;
 	},
 	//渲染边框
 	_renderBorder : function(){

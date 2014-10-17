@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">
+
+var Util = require(&#39;achart-util&#39;),
+  Legend = require(&#39;./legend&#39;);
+
+<span id='Chart-Legend-UseLegend'>/**
+</span> * @class Chart.Legend.UseLegend
+ * 使用图例的扩展
+ * 
+ * - &lt;a href=&quot;http://spmjs.io/docs/achart-legend/#legend-uselegend&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ * - &lt;a href=&quot;http://spmjs.io/docs/achart-legend/wiki/use.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
+ */
+var UseLegend = function () {
+  // body...
+};
+
+UseLegend.ATTRS = {
+<span id='Chart-Legend-UseLegend-property-legend'>  /**
+</span>   * legend配置项
+   * @type {Object}
+   */
+  legend : null,
+
+<span id='Chart-Legend-UseLegend-property-legendGroup'>  /**
+</span>   * 生成的Legend对象
+   * @type {Chart.Legend}
+   */
+  legendGroup : null
+}
+
+UseLegend.prototype = {
+
+<span id='Chart-Legend-UseLegend-method-renderLegend'>  /**
+</span>   * @protected
+   * 渲染legend
+   */
+  renderLegend : function(){
+    var _self = this,
+      legend = _self.get(&#39;legend&#39;),
+      canvas = _self.get(&#39;canvas&#39;);
+    if(legend){
+      if(!legend.plotRange){
+        legend.plotRange = _self.get(&#39;plotRange&#39;) || _self.get(&#39;parent&#39;).get(&#39;plotRange&#39;);
+      }
+       legend.items = legend.items || _self.getLengendItems();
+      var 
+        legendGroup = canvas.addGroup(Legend,legend);
+      _self.set(&#39;legendGroup&#39;,legendGroup);
+      _self._bindLegendEvent();
+    }
+  },
+<span id='Chart-Legend-UseLegend-method-getLengendItems'>  /**
+</span>   * @protected
+   * 获取Legend的子项集合
+   * @return {Array} 子项集合
+   */
+  getLengendItems : function(){
+    return [];
+  },
+<span id='Chart-Legend-UseLegend-method-getByLendItem'>  /**
+</span>   * @protected
+   * @param  {Chart.Legend.Item} legendItem 图例的子项
+   * @return {Chart.Canvas.Group} 子项
+   */
+  getByLendItem : function(legendItem){
+    return legendItem.get(&#39;item&#39;);
+  },
+<span id='Chart-Legend-UseLegend-method-addLengendItem'>  /**
+</span>   * 添加Legend 子项
+   * @protected
+   */
+  addLengendItem : function(item){
+    var _self = this,
+      legendGroup = _self.get(&#39;legendGroup&#39;);
+
+    if(legendGroup){
+      legendGroup.addItem(item);
+    }
+  },
+<span id='Chart-Legend-UseLegend-method-resetLegendItems'>  /**
+</span>   * @protected
+   * 重置legends
+   */
+  resetLegendItems : function(){
+    var _self = this,
+      legendGroup = _self.get(&#39;legendGroup&#39;),
+      items = _self.getLengendItems();
+    legendGroup.setItems(items);
+  },
+  //鼠标事件
+  _bindLegendEvent : function(){
+    var _self = this,
+      legendGroup = _self.get(&#39;legendGroup&#39;);
+
+    //over
+    legendGroup.on(&#39;itemover&#39;,function(ev){
+      var legendItem = ev.item,
+        item = _self.getByLendItem(legendItem);
+      if(_self.setActivedItem){
+        _self.setActivedItem(item);
+      }
+    });
+
+    //out
+    legendGroup.on(&#39;itemout&#39;,function(ev){
+      var legendItem = ev.item,
+        item = _self.getByLendItem(legendItem);
+      if(_self.clearActivedItem){
+        _self.clearActivedItem(item);
+      }
+    });
+
+    legendGroup.on(&#39;itemchecked&#39;,function(ev){
+      var legendItem = ev.item,
+        item = _self.getByLendItem(legendItem);
+      _self.showChild(item);
+    });
+
+    legendGroup.on(&#39;itemunchecked&#39;,function(ev){
+      var legendItem = ev.item,
+        item = _self.getByLendItem(legendItem);
+      _self.hideChild(item);
+    });
+  },
+<span id='Chart-Legend-UseLegend-method-removeLegend'>  /**
+</span>   * @protected
+   * 移除legend
+   */
+  removeLegend : function(){
+    var _self = this,
+      legendGroup = _self.get(&#39;legendGroup&#39;);
+    if(legendGroup){
+      legendGroup.remove();
+    }
+  }
+
+};
+
+module.exports = UseLegend;</pre>
+</body>
+</html>

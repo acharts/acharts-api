@@ -27,6 +27,10 @@ var Util = require(&#39;achart-util&#39;),
 <span id='Chart-Axis-Radius'>/**
 </span> * @class Chart.Axis.Radius
  * 圆的半径坐标轴
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/#axis-radius&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/wiki/5-circle.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @extends Chart.Axis.Number
  */
 var Radius = function(cfg){
@@ -40,6 +44,7 @@ Radius.ATTRS = {
    * @type {Chart.Axis.Circle}
    */
   circle : null,
+  
   position : &#39;left&#39;,
 <span id='Chart-Axis-Radius-property-type'>  /**
 </span>   * 类型
@@ -57,9 +62,10 @@ Util.augment(Radius,{
     Radius.superclass.beforeRenderUI.call(this);
     var _self = this,
       circle = _self.get(&#39;circle&#39;);
-
-    _self.set(&#39;start&#39;,circle.getCenter());
-    _self.set(&#39;end&#39;,circle.getCirclePoint(0));
+    if(circle){
+      _self.set(&#39;start&#39;,circle.getCenter());
+      _self.set(&#39;end&#39;,circle.getCirclePoint(0));
+    }
   },
 <span id='Chart-Axis-Radius-method-getGridItemCfg'>  /**
 </span>   * 获取栅格项的配置信息，一般是起始点信息
@@ -98,6 +104,19 @@ Util.augment(Radius,{
       offset = _self.getOffset(value);
 
     return circle.getCirclePoint(angle,Math.abs(offset - center.y))
+  },
+  _resetRange : function(){
+
+  },
+  isRangeChange : function(){
+    return false;
+  },
+  getValueByPoint : function(x,y){
+    var _self = this,
+      circle = _self.get(&#39;circle&#39;),
+      center = circle.getCenter(),
+      distance = circle.getDistance(x,y);
+    return _self.getValue(center.y - distance);
   }
 });
 

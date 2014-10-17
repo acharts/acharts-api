@@ -42,20 +42,21 @@ function parseTime(d){
 <span id='Chart-Axis-Time'>/**
 </span> * @class Chart.Axis.Time
  * 时间坐标轴
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/#axis-time&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/wiki/4-time.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
  */
 var Time = function(cfg){
   Time.superclass.constructor.call(this,cfg)
 };
 
 Time.ATTRS = {
-
+  type : &#39;time&#39;,
 <span id='Chart-Axis-Time-property-startDate'>  /**
 </span>   * 开始日期时间
    * @type {Date}
    */
   startDate : null,
-
-  dateFormat : null,
 
   autoOffset : true,
 <span id='Chart-Axis-Time-property-endDate'>  /**

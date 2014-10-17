@@ -35,16 +35,12 @@ Group.ATTRS = {
 </span>   * 沿x轴的偏移量
    * @type {Number}
    */
-  x : {
-
-  },
+  x : null,
 <span id='Chart-Canvas-Group-property-y'>  /**
 </span>   * 沿y轴的偏移量
    * @type {Number}
    */
-  y : {
-
-  }
+  y : null
 };
 
 Util.extend(Group,Container);
@@ -58,21 +54,25 @@ Util.augment(Group,{
    * @type {Boolean}
    */
   isGroup : true,
-
-  renderUI : function(){
+  //创建DOM 
+  createDom : function(){
     var _self = this,
       el = _self.get(&#39;el&#39;),
       attrs = _self.get(&#39;attrs&#39;),
       node;
     if(!el){
-      el = _self.createElement(attrs);
+      el = _self.createElement();
+      attrs &amp;&amp; el.attr(attrs);
       _self.set(&#39;el&#39;,el);
     }
 
     node = el.node;
     node.group = _self;
     _self.set(&#39;node&#39;,node);
-    _self._initTranslate();
+  },
+  //渲染
+  renderUI : function(){
+    this._initTranslate();
   },
   //初始化平移
   _initTranslate: function(){
@@ -143,7 +143,7 @@ Util.augment(Group,{
     return node == element || Util.contains(node,element);
   },
 <span id='Chart-Canvas-Group-method-animate'>  /**
-</span>   * 执行动画,对于分组来说，animate仅支持平移动画
+</span>   * 执行动画,对于分组来说，animate仅支持平移动画和clip-rect
    *
    * &lt;code&gt;
    *   group.animate({
@@ -160,10 +160,17 @@ Util.augment(Group,{
   animate : function(params,ms,easing,callback){
     var _self = this,
       el = _self.get(&#39;el&#39;);
+    
+
     if(Util.svg){
-      el.animate({
-        transform : &#39;t &#39;+ params.x + &#39; &#39; + params.y
-      },ms,easing,callback);
+      var cfg = {};
+      if(params.x != undefined){
+        cfg.transform = &#39;t &#39;+ params.x + &#39; &#39; + params.y;
+      }
+      if(params[&#39;clip-rect&#39;]){
+        cfg[&#39;clip-rect&#39;] = params[&#39;clip-rect&#39;];
+      }
+      el.animate(cfg,ms,easing,callback);
     }else{
       el.animate(params,ms,easing,callback);
     }

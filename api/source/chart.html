@@ -29,13 +29,14 @@ var Util = require(&#39;achart-util&#39;),
 <span id='Chart'>/**
 </span> * @class Chart
  * 图，里面包括坐标轴、图例等图形
+ *
+ *  - [文档地址](http://spmjs.io/docs/acharts)
+ *  - [详细Wiki](http://spmjs.io/docs/acharts/wiki/)
  */
 var Chart = function(cfg){
   this._attrs = Util.mix({},Chart.ATTRS,cfg);
   this.events = {};
 };
-
-
 
 Chart.ATTRS = {
 
@@ -57,6 +58,17 @@ Chart.ATTRS = {
      * @type {Array}
      */
     data : undefined,
+
+<span id='Chart-property-yTickCounts'>    /**
+</span>     * y轴的坐标个数限制
+     * @type {Array}
+     */
+    yTickCounts : undefined,
+<span id='Chart-property-xTickCounts'>    /**
+</span>     * x轴的坐标轴个数限制
+     * @type {Array}
+     */
+    xTickCounts : undefined,
 
 <span id='Chart-property-width'>    /**
 </span>     * 宽度
@@ -468,6 +480,8 @@ Util.augment(Chart,{
     });
     Util.mix(true,cfg,theme,{
       colors :  attrs.colors,
+      xTickCounts : attrs.xTickCounts,
+      yTickCounts : attrs.yTickCounts,
       data : attrs.data,
       invert : _self.get(&#39;invert&#39;),
       fields : attrs.fields,
@@ -487,7 +501,11 @@ Util.augment(Chart,{
         yAxis : attrs.yAxis
       });
     }else if(Util.isArray(attrs.yAxis)){
-      attrs.yAxis[0] = Util.mix(true,{},theme.yAxis,attrs.yAxis[0]);
+
+      Util.each(attrs.yAxis,function(axis,indexs){
+        attrs.yAxis[indexs] = Util.mix(true,{},theme.yAxis,axis);
+      });
+      
       cfg.yAxis = attrs.yAxis;
     }
 

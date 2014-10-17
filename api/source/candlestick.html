@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">/*
+ *
+ * @line图的tag
+ *
+ * */
+
+var Cartesian = require(&#39;achart-series&#39;).Cartesian,
+    ActiveGroup = require(&#39;achart-actived&#39;).Group,
+    Flags = require(&#39;achart-flags&#39;),
+    Candlesticks = require(&#39;achart-candlesticks&#39;),
+    Util = require(&#39;achart-util&#39;);
+
+<span id='Chart-Series-Flag'>/**
+</span> * @class Chart.Series.Flag
+ * 图列上面的标识
+ * @extends Chart.Series.Cartesian
+ */
+function Candlestick(cfg){
+    Candlestick.superclass.constructor.call(this,cfg);
+}
+
+Candlestick.ATTRS = {
+    type : &#39;candlestick&#39;,
+
+    elCls : &#39;x-chart-candlestick-series&#39;,
+<span id='Chart-Series-Flag-property-candlesticks'>    /**
+</span>     * candlesticks 配置项
+     * @type {Object}
+     */
+    candlesticks : null,
+
+<span id='Chart-Series-Flag-property-flags'>    /**
+</span>     * 最高和最低值flag的配置项
+     * @type {Object}
+     */
+    flags: {
+        /*flag:{
+            distance: -10,
+            line: {
+                &#39;stroke&#39;: &#39;#ccc&#39;,
+                &#39;stroke-width&#39;: 1
+            },
+            shapeType: &#39;rect&#39;,
+            shapeCfg: {
+                width: 30,
+                stroke: &#39;#ccc&#39;
+            },
+            title: &#39;B&#39;,
+            titleCfg: {
+                rotate : 90,
+                fill : &#39;#ccc&#39;,
+                &#39;font-size&#39;:12,
+                &#39;font-weight&#39; : &#39;bold&#39;
+            }
+        },
+        max:{
+            title: &#39;最高&#39;
+        },
+        min:{
+            title: &#39;最低&#39;
+        }*/
+    },
+
+    zIndex: 5,
+
+    //每个蜡烛的最大宽度
+    maxWidth: 30
+};
+
+Util.extend(Candlestick,Cartesian);
+Util.mixin(Candlestick,[ActiveGroup]);
+
+Util.augment(Candlestick,{
+    renderUI: function(){
+        var _self = this;
+        Candlestick.superclass.renderUI.call(_self);
+
+        _self.processColor();
+        _self.renderLabels();
+        _self.renderMarkers();
+        if(_self.get(&#39;autoPaint&#39;)){
+            _self.paint();
+        }
+
+        //添加Candlesticks
+        _self.set(&#39;candlesticksGroup&#39;,_self.addGroup(Candlesticks,_self.get(&#39;candlesticks&#39;)));
+    },
+<span id='Chart-Series-Flag-method-changeShapes'>    /**
+</span>     *  @private
+     *  重写legend导致的画面变动
+     */
+    changeShapes : function(points,animate){
+        var _self = this,
+            candlesticksGroup = _self.get(&#39;candlesticksGroup&#39;);
+
+        points = points || this._getPoints();
+
+        _self._setWidth(points.length);
+
+        var newItems = [];
+
+        Util.each(points, function (item, index) {
+            var cfg = _self.__getShapeCfg(item, index)
+            newItems.push(cfg);
+        });
+
+        candlesticksGroup.change(newItems);
+        _self.set(&#39;items&#39;,newItems);
+
+        //flag
+        var items = _self._getFlagsCfg(points),
+            flagGroup = _self.get(&#39;flagGroup&#39;);
+
+        flagGroup &amp;&amp; flagGroup.change(items);
+    },
+    //设置每个蜡烛的宽度
+    _setWidth: function(pointNum){
+        var _self = this,
+            xAxis = _self.get(&#39;xAxis&#39;),
+            maxWidth = _self.get(&#39;maxWidth&#39;),
+            plotRange = xAxis.get(&#39;plotRange&#39;);
+
+        var singleWidth = plotRange.getWidth()/(pointNum * 2);
+        //宽度设置
+        _self.set(&#39;singleWidth&#39;,Math.min(singleWidth,maxWidth));
+    },
+<span id='Chart-Series-Flag-method-getTipInfo'>    /**
+</span>     * @protect
+     * 获取提示信息
+     * @return {*} 返回显示在上面的文本
+     */
+    getTipInfo : function(point){
+        var _self = this,
+            items = [];
+
+        var seriesColor = _self.get(&#39;color&#39;),
+            tipNames = _self.get(&#39;tipNames&#39;) || [&#39;open&#39;,&#39;high&#39;,&#39;low&#39;,&#39;close&#39;],
+            tipColors = _self.get(&#39;tipColors&#39;) || [seriesColor,seriesColor,seriesColor,seriesColor];
+
+        for(var i = 0;i &lt; 4; i ++){
+            var item = {};
+            item.name = tipNames[i];
+            item.value = point.arr[i + 1].toFixed(2);
+            item.color = tipColors[i];
+            item.suffix = _self.get(&#39;suffix&#39;);
+
+            items.push(item);
+        }
+
+        return items;
+    },
+    getData : function(type){
+        var _self = this,
+            data = _self.get(&#39;data&#39;),
+            rst = [];
+        if(type == &#39;xAxis&#39;){
+
+            rst = Util.map(data,function(item){
+                return item[0];
+            });
+        }else{
+            Util.each(data,function(item){
+                var tmp = item.slice(1,5);
+                rst.push(Math.max.apply(null,tmp));
+                rst.push(Math.min.apply(null,tmp));
+            });
+        }
+        return rst;
+    },
+    //根据points画出标记
+    draw : function(points,callback){
+        var _self = this;
+
+        _self._setWidth(points.length);
+        var items = [];
+        Util.each(points, function (item, index) {
+            var item = _self._drawShape(item, index);
+            items.push(item);
+        });
+        _self.set(&#39;items&#39;,items);
+
+        //flag
+        var flagGroup = _self.get(&#39;flagGroup&#39;),
+            flagsCfg = _self.get(&#39;flags&#39;);
+
+        if(flagsCfg &amp;&amp; !flagGroup){
+            var items = _self._getFlagsCfg(points);
+
+            flagsCfg.items = items;
+            flagGroup = _self.addGroup(Flags,flagsCfg);
+            _self.set(&#39;flagGroup&#39;,flagGroup);
+        }
+
+        callback &amp;&amp; callback();
+    },
+<span id='Chart-Series-Flag-method-_drawShape'>    /**
+</span>     *  @private
+     *  根据点绘制
+     */
+    _drawShape: function(point,index){
+        var _self = this,
+            candlesticksGroup = _self.get(&#39;candlesticksGroup&#39;);
+
+        var cfg = _self.__getShapeCfg(point,index);
+        if(!candlesticksGroup){
+            //添加Candlesticks
+            candlesticksGroup = _self.addGroup(Candlesticks,_self.get(&#39;candlesticks&#39;))
+            _self.set(&#39;candlesticksGroup&#39;,candlesticksGroup);
+        }
+
+        var candlestick = candlesticksGroup.addCandlestick(cfg);
+        return candlestick;
+    },
+    //获取points信息 [open,high,low,close]
+    __getShapeCfg: function(point,index){
+        var _self = this,
+            singleWidth = _self.get(&#39;singleWidth&#39;),
+            item = point.arr,
+            points = [];
+
+        points.push(point);
+        var highPoint = _self.getPointByValue(item[0],item[2]);
+        points.push(highPoint);
+        var lowPoint = _self.getPointByValue(item[0],item[3]);
+        points.push(lowPoint);
+        var closePoint = _self.getPointByValue(item[0],item[4]);
+        points.push(closePoint);
+
+        //宽度设置
+        var cfg = {
+            points: points,
+            singleWidth: singleWidth
+        }
+
+        return cfg;
+    },
+    //绘制最高点和最低点的flag
+    _getFlagsCfg: function(points){
+        var _self = this,
+            items = [],
+            flags = _self.get(&#39;flags&#39;),
+            maxPoint,minPoint;
+        if(flags){
+            Util.each(points,function(item,index){
+                var point = item.arr,
+                    max = point[2],min = point[3];
+                if(index == 0){
+                    maxPoint = minPoint = item;
+                }else{
+                    var selMax = maxPoint.arr[2],
+                        selMin = minPoint.arr[3];
+
+                    if(max &gt;= selMax){
+                        maxPoint = item;
+                    }
+
+                    if(min &lt;= selMin){
+                        minPoint = item;
+                    }
+                }
+            });
+            if(flags.max){
+                items.push(Util.mix({},flags.max,{
+                    point: _self.getPointByValue(maxPoint.arr[0],maxPoint.arr[2])
+                }));
+            }
+            if(flags.min){
+                items.push(Util.mix({},flags.min,{
+                    point: _self.getPointByValue(minPoint.arr[0],minPoint.arr[2])
+                }));
+            }
+        }
+        return items;
+    }
+});
+
+module.exports = Candlestick;</pre>
+</body>
+</html>

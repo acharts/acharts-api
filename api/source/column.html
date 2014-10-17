@@ -64,6 +64,10 @@ function getPiePath (startAngle, endAngle,r,ir,circle) {
 <span id='Chart-Series-Column'>/**
 </span> * @class Chart.Series.Column
  * 柱状图
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/#Column&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/05-column.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @extends Chart.Series.Cartesian
  * @mixins Chart.Series.ItemGroup
  */
@@ -91,7 +95,7 @@ Column.ATTRS = {
 </span>   * 是否允许取消选中，选中状态下，继续点击则会取消选中
    * @type {Boolean}
    */
-  cancelSelect : &#39;false&#39;,
+  cancelSelect : false,
 <span id='Chart-Series-Column-property-stackPadding'>  /**
 </span>   * 发生层叠时，层叠之间的间距
    * @type {Object}
@@ -182,7 +186,7 @@ Util.augment(Column,{
     var _self = this,
       curIndex,
       xAxis = _self.get(&#39;xAxis&#39;),
-      tickLength = xAxis.getTickAvgLength(),
+      tickLength = _self._getAvgLength(),
       count,
       margin = 10,
       width,
@@ -198,6 +202,21 @@ Util.augment(Column,{
     _self.set(&#39;columnWidth&#39;,width);
     _self.set(&#39;columnOffset&#39;,offset)
 
+  },
+  _getAvgLength : function(){
+    var _self = this,
+      xAxis = _self.get(&#39;xAxis&#39;),
+      type = xAxis.get(&#39;type&#39;),
+      avgLength,
+      data = _self.get(&#39;data&#39;);
+
+    if(type != &#39;time&#39; &amp;&amp; type != &#39;number&#39; &amp;&amp; type != &#39;timeCategory&#39;){
+      avgLength = xAxis.getTickAvgLength();
+    }else{
+      var length = xAxis.getLength();
+      avgLength = length / data.length;
+    }
+    return avgLength;
   },
   //获取index相关信息
   _getIndexInfo : function(){

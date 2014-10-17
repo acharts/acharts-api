@@ -41,6 +41,10 @@ var
 <span id='Chart-Series-Cartesian'>/**
 </span> * @class Chart.Series.Cartesian
  * 使用坐标轴的数据序列，此类是一个抽象类，不要直接初始化
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/#Cartesian&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/02-cartesian.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @extends Chart.Series
  */
 function Cartesian(cfg){
@@ -138,23 +142,20 @@ Util.augment(Cartesian,{
     this.set(&#39;pointsCache&#39;,{});
     Cartesian.superclass.changeData.call(this,data,redraw);
   },
-<span id='Chart-Series-Cartesian-method-getPointByObject'>  /**
-</span>   * 
-   * @protected
-   * @return {Object} 点的集合
+<span id='Chart-Series-Cartesian-method-hasXValueInArray'>  /**
+</span>   * @protected
+   * 传入的数据中是否存在x轴的值，如果不存在则使用index计算
+   * @return {Boolean} 
    */
-  getPointByObject : function(item,index){
+  hasXValueInArray : function(){
     var _self = this,
-      xField = _self.get(&#39;xField&#39;),
-      yField = _self.get(&#39;yField&#39;),
-      point = _self.getPoint(item[xField],item[yField]);
-
-    point.value = item[yField];
-    point.xValue = item[xField];
-    point.yValue = _self.parseYValue(item[yField]);
-    point.obj = item; //如果是记录
-    
-    return point;
+      xAxis = _self.get(&#39;xAxis&#39;),
+      type = xAxis.get(&#39;type&#39;);
+    //如果是时间、数字坐标轴，同时设置了点的间距，不需要数组中存在 x值
+    if((type == &#39;number&#39; || type == &#39;time&#39;) &amp;&amp; _self.get(&#39;pointInterval&#39;)){
+      return false;
+    }
+    return true;
   },
 <span id='Chart-Series-Cartesian-method-getPointByValue'>  /**
 </span>   * @protected
@@ -172,6 +173,29 @@ Util.augment(Cartesian,{
    */
   parseYValue : function(value){
     return value;
+  },
+<span id='Chart-Series-Cartesian-method-animateClip'>  /**
+</span>   * 执行平铺动画，从左到右，从上到下显示图表序列
+   * @param  {Function} fn  执行的函数
+   * @param  {Function} callback 回调
+   */
+  animateClip : function(fn,callback){
+    var _self = this,
+      canvas = _self.get(&#39;canvas&#39;),
+      invert = _self.get(&#39;invert&#39;),
+      width = canvas.get(&#39;width&#39;),
+      duration = _self.get(&#39;duration&#39;),
+      height = canvas.get(&#39;height&#39;),
+      clip =  invert ? &#39;0,0,&#39; + width + &#39;,0&#39; : &#39;0,0,0,&#39; + height;
+
+    _self.attr(&#39;clip-rect&#39;,clip);
+    fn &amp;&amp; fn();
+    _self.animate({
+      &#39;clip-rect&#39; : &#39;0,0,&#39; + width + &#39;,&#39;+height
+    },duration,function(){
+      callback &amp;&amp; callback();
+      _self.attr(&#39;clip-rect&#39;,&#39;&#39;);
+    }); 
   },
 <span id='Chart-Series-Cartesian-method-snapEqual'>  /**
 </span>   * @protected

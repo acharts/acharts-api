@@ -40,10 +40,10 @@ var Base = function(cfg){
 };
 
 Base.ATTRS = {
-<span id='Chart-Canvas-Base-property-zIndex'>      /**
-</span>       * 所在父元素中的优先级，仅在父元素排序时有效
-       * @type {Number}
-       */
+<span id='Chart-Canvas-Base-property-zIndex'>  /**
+</span>   * 所在父元素中的优先级，仅在父元素排序时有效
+   * @type {Number}
+   */
   zIndex : null,
 <span id='Chart-Canvas-Base-property-el'>  /**
 </span>   * @protected
@@ -65,6 +65,17 @@ Base.ATTRS = {
    * @type {Boolean}
    */
   visible : true  
+
+<span id='Chart-Canvas-Base-event-hide'>  /**
+</span>   * @event hide
+   * 隐藏
+   */
+  
+<span id='Chart-Canvas-Base-event-show'>  /**
+</span>   * @event show 显示
+   * 显示
+   */
+  
 };
 
 Util.augment(Base,{
@@ -81,6 +92,10 @@ Util.augment(Base,{
    * @protected
    */
   set : function(name,value){
+    var m = &#39;_onRender&#39; + Util.ucfirst(name);
+    if(this[m]){
+      this[m](value,this._attrs[name]);
+    }
     this._attrs[name] = value;
   },
 <span id='Chart-Canvas-Base-method-get'>  /**
@@ -103,15 +118,21 @@ Util.augment(Base,{
 </span>   * 显示
    */
   show : function(){
-      this.get(&#39;el&#39;).show();
-      this.set(&#39;visible&#39;,true);
+    this.get(&#39;el&#39;).show();
+    this.set(&#39;visible&#39;,true);
+    if(!this.get(&#39;visible&#39;)){
+      this.fire(&#39;show&#39;);
+    }
   },
 <span id='Chart-Canvas-Base-method-hide'>  /**
 </span>   * 隐藏
    */
   hide : function(){
-      this.get(&#39;el&#39;).hide();
-      this.set(&#39;visible&#39;,false);
+    this.get(&#39;el&#39;).hide();
+    this.set(&#39;visible&#39;,false);
+    if(this.get(&#39;visible&#39;)){
+      this.fire(&#39;hide&#39;);
+    }
   },  
 <span id='Chart-Canvas-Base-method-attr'>  /**
 </span>   * 设置或者设置属性，有一下3中情形：
@@ -219,6 +240,32 @@ Util.augment(Base,{
     }
     return _self;
   },
+  //渲染应用的 class
+  _onRenderElCls : function(cls,pre){
+    var _self = this,
+      node = _self.get(&#39;node&#39;),
+      oldCls = node.getAttribute(&#39;class&#39;),
+      arr = oldCls ? oldCls.split(&#39; &#39;) : [];
+
+    if(pre){
+      Util.remove(arr,pre);
+    }
+    if(cls){
+      arr.push(cls);              
+    }
+    node.setAttribute(&#39;class&#39;,arr.join(&#39; &#39;)); 
+  },
+  //设置zIndex
+  _onRenderZIndex : function(zIndex){
+    var _self = this,
+      node = _self.get(&#39;node&#39;);
+    if(zIndex != null){
+        node.setAttribute(&#39;zIndex&#39;,zIndex);
+        if(Util.vml){
+            node.style.zIndex = zIndex;
+        }
+    }
+  },
 <span id='Chart-Canvas-Base-method-beforeRenderUI'>  /**
 </span>   * @protected
    * 渲染控件
@@ -231,37 +278,39 @@ Util.augment(Base,{
    */
   render : function(){
     var _self = this,
-      cls = _self.get(&#39;elCls&#39;),
+      //cls = _self.get(&#39;elCls&#39;),
       zIndex = _self.get(&#39;zIndex&#39;),
+      attrs = _self._attrs,
       node;
 
     if(!_self.get(&#39;rendered&#39;)){
-          _self.beforeRenderUI();
-
+      
+      _self.createDom();
+      _self.beforeRenderUI();
       _self.renderUI();
       _self.set(&#39;rendered&#39;,true);
-          node = _self.get(&#39;node&#39;);
-          if(this.get(&#39;visible&#39;) == false){
-              this.hide();
-          }
-          if(cls){
-              var oldCls = node.getAttribute(&#39;class&#39;);
-                  
-              if(oldCls){
-                 node.setAttribute(&#39;class&#39;,oldCls + &#39; &#39; + cls); 
-              }else{
-                 node.setAttribute(&#39;class&#39;,cls); 
-              }
-              
-          }
-          if(zIndex != null){
-              node.setAttribute(&#39;zIndex&#39;,zIndex);
-              if(Util.vml){
-                  node.style.zIndex = zIndex;
-              }
-          }
-          _self.bindUI();
+      node = _self.get(&#39;node&#39;);
+      if(this.get(&#39;visible&#39;) == false){
+          this.hide();
+      }
+
+      Util.each(attrs,function(v,k){
+        var m = _self[&#39;_onRender&#39; + Util.ucfirst(k)];
+        if(m){
+          m.call(_self,v);
+        }
+      });
+     
+      _self.bindUI();
     }
+  },
+
+<span id='Chart-Canvas-Base-method-createDom'>  /**
+</span>   * @protected
+   * 创建dom
+   */
+  createDom : function(){
+
   },
 
 <span id='Chart-Canvas-Base-method-renderUI'>  /**

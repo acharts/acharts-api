@@ -39,9 +39,13 @@ function initClassAttrs(c){
   Util.mix(true,c._attrs,c.ATTRS);
 }
 
-<span id='Chart-PlotItem'>/**
-</span> * @class Chart.PlotItem
+<span id='Chart-Plot-Item'>/**
+</span> * @class Chart.Plot.Item
  * 图表内部元素的基类
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-plot/#plot-item&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-plot/wiki/item.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @extends Chart.Canvas.Group
  * 
  */
@@ -51,20 +55,20 @@ function Item(cfg){
 };
 
 Item.ATTRS = {
-<span id='Chart-PlotItem-property-itemName'>  /**
+<span id='Chart-Plot-Item-property-itemName'>  /**
 </span>   * 活动子项的名称，用于组成 itemactived,itemunactived的事件
    * @protected
    * @type {String}
    */
   itemName : &#39;item&#39;,
-<span id='Chart-PlotItem-property-groupName'>  /**
+<span id='Chart-Plot-Item-property-groupName'>  /**
 </span>   * 所属分组的名称,用于事件中标示父元素
    * @protected
    * @type {String}
    */
   groupName : &#39;group&#39;,
 
-<span id='Chart-PlotItem-property-events'>  /**
+<span id='Chart-Plot-Item-property-events'>  /**
 </span>   * 事件回调，支持dom的所有事件和自定义事件
    * @type {Object}
    */
@@ -84,16 +88,18 @@ Util.augment(Item,{
 	},
 
   //绑定事件
-  bindUI : function(){
+  beforeRenderUI : function(){
     var _self = this,
       events = _self.get(&#39;events&#39;);
+
+    Item.superclass.beforeRenderUI.call(this);
     if(events){
       Util.each(events,function(v,k){
         _self.on(k,v);
       });
     }
   },
-<span id='Chart-PlotItem-method-getVisibleChildren'>  /**
+<span id='Chart-Plot-Item-method-getVisibleChildren'>  /**
 </span>   * 获取显示的子项
    * @return {Array} 显示的子项
    */
@@ -104,21 +110,23 @@ Util.augment(Item,{
       return item.get(&#39;visible&#39;);
     });
   },
-<span id='Chart-PlotItem-method-showChild'>  /**
+<span id='Chart-Plot-Item-method-showChild'>  /**
 </span>   * 显示子项
    * @param  {Chart.Canvas.Base} child 子项
    */
   showChild : function(child){
-    child &amp;&amp; child.show();
+    if(child){
+      child.show();
+    }
   },
-<span id='Chart-PlotItem-method-hideChild'>  /**
+<span id='Chart-Plot-Item-method-hideChild'>  /**
 </span>   * 隐藏子项
    * @param  {Chart.Canvas.Base} child 子项
    */
   hideChild : function(child){
     child &amp;&amp; child.hide();
   },
-<span id='Chart-PlotItem-method-fireUp'>  /**
+<span id='Chart-Plot-Item-method-fireUp'>  /**
 </span>   * 在顶层图表控件上触发事件
    * @param {String} name 事件名称
    * @param  {Object} ev 事件对象
@@ -133,7 +141,7 @@ Util.augment(Item,{
       chart.fire(name,ev);
     }
   },
-<span id='Chart-PlotItem-method-fireUpGroup'>  /**
+<span id='Chart-Plot-Item-method-fireUpGroup'>  /**
 </span>   * @protected
    * 在分组上触发事件
    * @param  {String} name 事件名称

@@ -31,7 +31,12 @@ var
 <span id='Chart-Markers'>/**
 </span> * @class Chart.Markers
  * 显示点的标记集合
- * @extends Chart.PlotItem
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-markers/&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-markers/wiki/&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
+ * @extends Chart.Plot.Item
+ * @mixins Chart.Actived.Group
  */
 var Markers = function(cfg){
 	Markers.superclass.constructor.call(this,cfg);
@@ -64,6 +69,14 @@ Markers.ATTRS = {
 </span>	 * @private
 	 */
 	xCache : null
+
+<span id='Chart-Markers-event-markerclick'>	/**
+</span>	 * @event markerclick
+	 * 点击marker
+	 * @param {Object} ev 事件对象
+	 * @param {Object} ev.marker 点击的marker
+	 * @param {Object} ev.point 点击的marker对应的点信息
+	 */
 };
 
 Util.augment(Markers,{
@@ -74,6 +87,17 @@ Util.augment(Markers,{
 		_self.set(&#39;xCache&#39;,[]);
 		Markers.superclass.renderUI.call(_self);
 		_self._drawMarkers();
+	},
+	bindUI : function(){
+		var _self = this;
+
+		_self.on(&#39;click&#39;,function(ev){
+			var shape = ev.target.shape;
+			if(shape){
+				var point = shape.get(&#39;point&#39;) || shape.get(&#39;item&#39;);
+				_self.fire(&#39;markerclick&#39;,{marker : shape,point : point});
+			}
+		});
 	},
 <span id='Chart-Markers-method-isItemActived'>	/**
 </span>	 * @protected
@@ -129,10 +153,19 @@ Util.augment(Markers,{
 			var marker = children[index];
 			if(marker){
 				if(Util.svg){
-					marker.animate({
-						x : item.x,
-						y : item.y
-					},400);
+					if(_self.get(&#39;animate&#39;)){
+						var info = {
+							x : item.x,
+							y : item.y
+						},
+						temp = Util.mix({},item);
+						delete temp.x;
+						delete temp.y;
+						marker.animate(info,400);
+						marker.attr(temp);
+					}else{
+						marker.attr(item);
+					}
 				}else{
 					marker.attr(item);
 				}
@@ -141,6 +174,7 @@ Util.augment(Markers,{
 				}else{
 					xCache.push(item.x);
 				}
+				marker.set(&#39;item&#39;,item);
 				
 			}else{
 				_self._addMarker(item);
@@ -189,8 +223,10 @@ Util.augment(Markers,{
 		}else{
 			xCache.push(parseInt(item.x));
 		}
-		
-		return _self.addShape(&#39;marker&#39;,cfg);
+
+		var shape = _self.addShape(&#39;marker&#39;,cfg);
+		shape.set(&#39;item&#39;,item);
+		return shape;
 	},
 <span id='Chart-Markers-method-getSnapMarker'>	/**
 </span>	 * 获取逼近的marker

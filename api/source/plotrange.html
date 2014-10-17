@@ -29,9 +29,13 @@ function max(x,y){
 	return x &gt; y ? x : y;
 }
 
-<span id='Chart-PlotRange'>/**
-</span> * @class Chart.PlotRange
+<span id='Chart-Plot-Range'>/**
+</span> * @class Chart.Plot.Range
  * 用于计算是否在坐标轴内的帮助类
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-plot/#plot-range&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-plot/wiki/range.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  * @protected
  */
 function PlotRange(start,end){
@@ -75,7 +79,7 @@ Util.augment(PlotRange,{
   		cc.y = (br.y - tl.y)/2 + tl.y;
   	
 	},
-<span id='Chart-PlotRange-method-reset'>  /**
+<span id='Chart-Plot-Range-method-reset'>  /**
 </span>   * 重置
    * @param  {Object} start 开始点
    * @param  {Object} end   结束点
@@ -85,7 +89,7 @@ Util.augment(PlotRange,{
     this.end = end;
     this.init();
   },
-<span id='Chart-PlotRange-method-isInRange'>	/**
+<span id='Chart-Plot-Range-method-isInRange'>	/**
 </span>	 * 是否在范围内
 	 * @param {Number} x x坐标
 	 * @param {Number} y y坐标
@@ -102,7 +106,7 @@ Util.augment(PlotRange,{
 
 		return x &gt;= tl.x &amp;&amp; x &lt;= br.x &amp;&amp; y &gt;= tl.y &amp;&amp; y &lt;= br.y;
 	},
-<span id='Chart-PlotRange-method-isInVertical'>	/**
+<span id='Chart-Plot-Range-method-isInVertical'>	/**
 </span>	 * 是否在垂直范围内
 	 * @param  {Number}  y y坐标
 	 * @return {Boolean} 在垂直范围内
@@ -119,7 +123,7 @@ Util.augment(PlotRange,{
 
 		return y &gt;= tl.y &amp;&amp; y &lt;= br.y;
 	},
-<span id='Chart-PlotRange-method-isInHorizontal'>	/**
+<span id='Chart-Plot-Range-method-isInHorizontal'>	/**
 </span>	 * 是否在水平范围内
 	 * @param  {Number}  x x坐标
 	 * @return {Boolean}  是否在水平范围内
@@ -136,7 +140,7 @@ Util.augment(PlotRange,{
 
 		return x &gt;= tl.x &amp;&amp; x &lt;= br.x;
 	},
-<span id='Chart-PlotRange-method-getWidth'>	/**
+<span id='Chart-Plot-Range-method-getWidth'>	/**
 </span>	 * 获取宽度
 	 * @return {Number} 宽度
 	 */
@@ -145,7 +149,7 @@ Util.augment(PlotRange,{
 			br = this.br;
 		return br.x - tl.x;
 	},
-<span id='Chart-PlotRange-method-getHeight'>	/**
+<span id='Chart-Plot-Range-method-getHeight'>	/**
 </span>	 * 获取宽度
 	 * @return {Number} 宽度
 	 */

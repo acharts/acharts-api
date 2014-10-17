@@ -36,9 +36,27 @@ function removeLabel(label){
 <span id='Chart-Series-ItemGroup'>/**
 </span> * @class Chart.Series.ItemGroup
  * 包含数据序列子项的数据序列类,作为一个扩展可以用于柱状图、饼图
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/api/itemgroup.html&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/08-itemgroup.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
  */
 var Group = function(){
 
+<span id='Chart-Series-ItemGroup-event-itemselected'>  /**
+</span>   * @event itemselected
+   * 选项激活
+   * @param {Object} ev 事件对象
+   * @param {Object} ev.item 选中的子项
+   */
+  
+
+<span id='Chart-Series-ItemGroup-event-itemunselected'>  /**
+</span>   * @event itemunselected
+   * 选项激活
+   * @param {Object} ev 事件对象
+   * @param {Object} ev.item 取消选中的子项
+   */
 };
 
 Group.ATTRS = {
@@ -114,6 +132,7 @@ Util.augment(Group,{
             _self.setSelected(shape);
           }
         }
+        _self.fire(&#39;itemclick&#39;,{item : shape,point : shape.get(&#39;point&#39;)});
         _self.fireUpGroup(&#39;click&#39;,shape);
       }
     });
@@ -146,7 +165,7 @@ Util.augment(Group,{
       var point = points[index],
         prePoint,
         path;
-      if(point){
+      if(point &amp;&amp; item.get(&#39;visible&#39;)){
         prePoint = item.get(&#39;point&#39;);
         item.set(&#39;point&#39;,point);
         item.set(&#39;prePoint&#39;,prePoint);
@@ -157,6 +176,9 @@ Util.augment(Group,{
         }else{
           _self.animateItem(item,prePoint);
         }
+        if(point.obj &amp;&amp; point.obj.attrs){
+          item.attr(point.obj.attrs);
+        }
       }
     });
 
@@ -166,14 +188,17 @@ Util.augment(Group,{
     //大于现有的点
     for (var i = length; i &lt; count; i++) {
       var shape = _self.addItem(points[i],i);
-
-      length &gt; 1 &amp;&amp; animate &amp;&amp; _self.animateItem(shape,items[length - 1].get(&#39;prePoint&#39;));
+      if(length &gt; 1 ){
+        animate &amp;&amp; _self.animateItem(shape,items[items.length - 1].get(&#39;prePoint&#39;));
+      }
+      
     }
 
     //小于现有的点
     for(var i = length - 1; i &gt;= count; i--){
       var item = items[i];
-      item.remove();
+      //item.remove();
+      _self.removeItem(item);
     }
 
   },
@@ -183,6 +208,7 @@ Util.augment(Group,{
    * 触发选中事件
    */
   onSelected : function(item){
+    this.fire(&#39;itemselected&#39;,{item:item,point : item.get(&#39;point&#39;)});
     this.fireUpGroup(&#39;selected&#39;,item);
   },
 <span id='Chart-Series-ItemGroup-method-onUnSelected'>  /**
@@ -190,6 +216,7 @@ Util.augment(Group,{
    * 触发移除选中
    */
   onUnSelected : function(item){
+    this.fire(&#39;itemunselected&#39;,{item:item,point : item.get(&#39;point&#39;)});
     this.fireUpGroup(&#39;unselected&#39;,item);
   },
 <span id='Chart-Series-ItemGroup-method-clearSelected'>  /**
@@ -298,8 +325,12 @@ Util.augment(Group,{
    * @param  {Object} item 子项
    */
   removeItem : function(item){
-    var _self = this;
+    var _self = this,
+     animHadler = item.get(&#39;animHadler&#39;);
     _self.removeLabel(item);
+    if(animHadler){
+      Util.stopStep(animHadler);
+    }
     item.remove();
   },
 <span id='Chart-Series-ItemGroup-method-removeLabel'>  /**

@@ -29,7 +29,11 @@ var
 <span id='Chart-Labels'>/**
 </span> * @class Chart.Labels
  * 文本集合
- * @extends Chart.PlotItem
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-labels/&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-labels/wiki/&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ *  
+ * @extends Chart.Plot.Item
  */
 var Labels = function(cfg){
 	Labels.superclass.constructor.call(this,cfg);
@@ -56,14 +60,34 @@ Labels.ATTRS = {
 	 */
 	renderer : null,
 
+<span id='Chart-Labels-property-custom'>	/**
+</span>	 * 是否自定义显示label
+	 * @type {Boolean}
+	 */
 	custom : false,
 
+<span id='Chart-Labels-property-html'>	/**
+</span>	 * custom : true时使用的容器的模板 ,必须存在 class = &quot;ac-labels &quot;
+	 * @type {String}
+	 */
 	html : &#39;&lt;div class=&quot;ac-labels&quot; style=&quot;position:absolute;top:0;left:0;&quot;&gt;&lt;/div&gt;&#39;,
 
+<span id='Chart-Labels-property-itemTpl'>	/**
+</span>	 * custom =true时，单个label的模板，必须存在 class = &quot;ac-label&quot;
+	 * @type {String}
+	 */
 	itemTpl : &#39;&lt;div class=&quot;ac-label&quot; style=&quot;position:absolute;&quot;&gt;{text}&lt;/div&gt;&#39;,
 
+<span id='Chart-Labels-property-animate'>	/**
+</span>	 * 改变时是否执行动画
+	 * @type {Boolean}
+	 */
 	animate : true,
-	
+		
+<span id='Chart-Labels-property-duration'>	/**
+</span>	 * 执行动画的时间
+	 * @type {Number}
+	 */
 	duration : 400
 
 };
@@ -164,7 +188,11 @@ Util.augment(Labels,{
 			return _self.get(&#39;children&#39;);
 		}
 	},
-	//更改label
+<span id='Chart-Labels-method-changeLabel'>	/**
+</span>	 * 更改label
+	 * @param  {Chart.Canvas.Shape.Label} label [description]
+	 * @param  {Object} item  [description]
+	 */
 	changeLabel : function(label,item){
 		var _self = this,
 			custom = _self.get(&#39;custom&#39;),

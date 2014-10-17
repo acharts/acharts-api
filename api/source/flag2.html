@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">/*
+ *
+ * @line图的tag
+ *
+ * */
+
+var Cartesian = require(&#39;achart-series&#39;).Cartesian,
+    Flags = require(&#39;achart-flags&#39;),
+    Util = require(&#39;achart-util&#39;);
+
+<span id='Chart-Series-Flag'>/**
+</span> * @class Chart.Series.Flag
+ * 图列上面的标识
+ * @extends Chart.Series.Cartesian
+ */
+function Flag(cfg){
+    Flag.superclass.constructor.call(this,cfg);
+}
+
+Util.extend(Flag,Cartesian);
+
+Flag.ATTRS = {
+    type : &#39;flag&#39;,
+
+    elCls : &#39;x-chart-flag-series&#39;,
+<span id='Chart-Series-Flag-property-flags'>    /**
+</span>     * flag 配置项
+     * @type {Object}
+     */
+    flags : null,
+
+    zIndex: 6
+};
+
+Util.augment(Flag,{
+<span id='Chart-Series-Flag-method-_getPoints'>    /**
+</span>     *  @private
+     *  重写获取point函数
+     */
+    _getPoints : function(){
+        var _self = this,
+            data = _self.get(&#39;data&#39;),
+            xField = _self.get(&#39;xField&#39;),
+            yField = _self.get(&#39;yField&#39;),
+            onSeries = _self.get(&#39;onSeries&#39;) || &#39;&#39;,
+            parent = _self.get(&#39;parent&#39;),
+            series = parent.find(onSeries),
+            flagAttrs = _self.get(&#39;flag&#39;),
+            lineAttrs = _self.get(&#39;line&#39;),
+            xAxis = _self.get(&#39;xAxis&#39;),
+            yAxis = _self.get(&#39;yAxis&#39;),
+            points = [];
+
+        cfg = Util.mix({},flagAttrs,lineAttrs);
+        Util.each(data,function(item,index){
+            var point,sameNum = 0;
+            if(Util.isObject(item)){
+                var xValue = item[xField];
+
+                //不存在落点线条 则落到坐标轴上面
+                if(!series || !series.get(&#39;visible&#39;)){
+                    var _x = xAxis.getOffset(xValue),
+                        _y = yAxis.getStartOffset();
+
+                    point = {
+                        x: _x,
+                        y: _y,
+                        xValue: xValue
+                    }
+                }
+                else{
+                    point = series.findPointByValue(xValue);
+                }
+
+                if(!point) return true;
+
+                //若存在坐标轴一样的flag  往上堆叠
+                Util.each(data,function(newItem,newIndex){
+                    if(newIndex &lt; index &amp;&amp; item[xField] == newItem[xField]){
+                        sameNum ++;
+                    }
+                });
+
+                point = Util.mix({},point,{
+                    y: point.y,
+                    index: sameNum
+                });
+
+                item.tooltip = (item.flag &amp;&amp; item.flag.text) ? item.flag.text : _self.get(&#39;flags&#39;).flag.text;
+
+                point.obj = item;
+
+            }
+            _self.processPoint(point,index);
+            points.push(point);
+        });
+
+        return points;
+    },
+<span id='Chart-Series-Flag-method-changeShapes'>    /**
+</span>     *  @private
+     *  重写legend导致的画面变动
+     */
+    changeShapes : function(points,animate){
+        var _self = this,
+            flagAttrs = _self.get(&#39;flag&#39;),
+            lineAttrs = _self.get(&#39;line&#39;),
+            cfg = Util.mix({},flagAttrs,lineAttrs),
+            flagGroup = _self.get(&#39;flagGroup&#39;);
+
+        animate = animate || _self.get(&#39;animate&#39;);
+
+        points = points || this._getPoints();
+
+        var newItems = [];
+
+        Util.each(points, function (item, index) {
+            var cfg = _self.__getShapeCfg(item, index)
+            newItems.push(cfg);
+
+            //if(flagGroup.get(&#39;flagGroups&#39;) &amp;&amp; flagGroup.get(&#39;flagGroups&#39;)[index]){
+                //flagGroup.get(&#39;flagGroups&#39;)[index].changeStackCfg(cfg);
+                flagGroup.changeStackCfg(index,cfg);
+            //}
+
+        });
+
+        flagGroup.change(newItems,animate);
+    },
+<span id='Chart-Series-Flag-method-getTipItem'>    /**
+</span>     * 获取提示信息
+     * @return {*} 返回显示在上面的文本
+     */
+    getTipItem : function(point){
+        return point.obj.tooltip ? point.obj.tooltip : point.value;
+    },
+    //根据points画出标记
+    draw : function(points,callback){
+        var _self = this,
+            animate = _self.get(&#39;animate&#39;),
+            duration = _self.get(&#39;duration&#39;);
+
+        //添加Flags
+        _self.set(&#39;flagGroup&#39;,_self.addGroup(Flags,_self.get(&#39;flags&#39;)))
+
+        if(!animate) {
+            Util.each(points, function (item, index) {
+                _self._drawShape(item, index);
+            });
+            _after();
+        }else{
+            var onSeries = _self.get(&#39;onSeries&#39;),
+                parent = _self.get(&#39;parent&#39;);
+
+            var seriesPoints = _self._getPoints();
+
+            var cur = 0,
+                sub = [],
+                count = seriesPoints.length;
+
+            //动画生成线和对应的点
+            Util.animStep(duration,function(factor){
+                var pre = cur;
+                cur = parseInt((factor) * count,10);
+                if(cur &gt; count - 1){
+                    cur = count - 1;
+                }
+
+                if(cur != pre){
+                    sub = points.slice(0,cur + 1);
+                    for(var i = pre; i&lt; cur; i++){
+                        _findFlagToDraw(seriesPoints[i]);
+                    }
+                }
+                if(factor == 1){
+                    _findFlagToDraw(seriesPoints[cur]);
+                }
+            },_after);
+        }
+
+        function _after(){
+            callback &amp;&amp; callback();
+        }
+
+        function _findFlagToDraw(currPoint){
+            Util.each(points, function (item, index) {
+                if(item.x == currPoint.x &amp;&amp; !item.isDraw){
+                    _self._drawShape(item, index);
+                    item.isDraw = true; //防止堆叠时候x值相同而重复画
+                }
+            });
+        }
+
+    },
+<span id='Chart-Series-Flag-method-_drawShape'>    /**
+</span>     *  @private
+     *  根据点绘制
+     */
+    _drawShape: function(point,index){
+        var _self = this,
+            flagGroup = _self.get(&#39;flagGroup&#39;);
+
+        var cfg = _self.__getShapeCfg(point,index);
+
+        var flag = flagGroup.addFlag(cfg);
+        return flag
+    },
+    __getShapeCfg: function(point,index){
+        var _self = this,
+            data = _self.get(&#39;data&#39;),
+            flagGroup = _self.get(&#39;flagGroup&#39;),
+            flagCfg = _self.get(&#39;flags&#39;);
+
+        flagCfg.flag.point = point;
+        var cfg = Util.mix({},{},{point: point});
+
+        //合并data内容到cfg
+        if(data &amp;&amp; data[index] &amp;&amp; data[index].flag){
+            Util.mix(cfg,data[index].flag);
+        }
+
+        //向上堆叠
+        if(point.index &gt; 0){
+            Util.each(flagGroup.get(&#39;children&#39;),function(item,index){
+                var lastPoint = item.get(&#39;point&#39;);
+                if(lastPoint.x == point.x &amp;&amp; (lastPoint.index + 1) == point.index){
+                    var newY = cfg.distance || item.get(&#39;distance&#39;) &lt;=0 ? item.get(&#39;topY&#39;) : item.get(&#39;bottomY&#39;);
+                    if(newY){
+                        cfg.point.y = newY;
+                    }
+                }
+            });
+        }
+
+        return cfg;
+    }
+});
+
+module.exports = Flag;</pre>
+</body>
+</html>

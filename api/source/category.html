@@ -23,9 +23,16 @@
 var Util = require(&#39;achart-util&#39;),
 	Axis = require(&#39;./base&#39;);
 
+
+
+
 <span id='Chart-Axis-Category'>/**
 </span> * @class Chart.Axis.Category
  * 分组坐标轴
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/#axis-category&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-axis/wiki/3-category.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
  * @extends Chart.Axis
  */
 function Category(cfg){
@@ -45,7 +52,13 @@ Category.ATTRS = {
 </span>     * 类型
      * @type {String}
      */
-    type : &#39;category&#39;
+    type : &#39;category&#39;,
+
+<span id='Chart-Axis-Category-property-tickAlignCenter'>    /**
+</span>     * 是否分类坐标点在2个tick的中间
+     * @type {Boolean}
+     */
+    tickAlignCenter : true
 
 };
 
@@ -60,11 +73,18 @@ Util.augment(Category,{
 		  var categories = _self.get(&#39;categories&#39;),
 		  	ticks = [];
 		  ticks = ticks.concat(categories);
-          if(ticks[ticks.length - 1] != &#39; &#39;){
-            ticks.push(&#39; &#39;);
+          if(_self.get(&#39;tickAlignCenter&#39;)){
+            if(ticks[ticks.length - 1] != &#39; &#39;){
+                ticks.push(&#39; &#39;);
+            }
           }
+          
           _self.set(&#39;ticks&#39;,ticks);
-		}
+		}else if(!_self.get(&#39;categories&#39;)){
+            var categories = [];
+            categories.concat(_self.get(&#39;ticks&#39;));
+            _self.set(&#39;categories&#39;,categories);
+        }
 	},
     //ticks 获取
     changeInfo : function(info){
@@ -72,15 +92,14 @@ Util.augment(Category,{
             ticks = info.ticks;
         if(!ticks){
             ticks = [].concat(info.categories);
-            if(ticks.length &amp;&amp; ticks[ticks.length - 1] != &#39; &#39;){
+            if(_self.get(&#39;tickAlignCenter&#39;) &amp;&amp; ticks.length &amp;&amp; ticks[ticks.length - 1] != &#39; &#39;){
                ticks.push(&#39; &#39;); 
             }
-        }else{
+        }else if(!info.categories){
             info.categories = [].concat(info.ticks);
             Util.remove(info.categories,&#39; &#39;);
         }
-        
-        
+
         _self.set(&#39;categories&#39;,info.categories);
         _self.set(&#39;ticks&#39;,ticks);
     },
@@ -89,15 +108,7 @@ Util.augment(Category,{
 	 * @ignore
 	 */
 	getOffsetByIndex : function(index){
-    	var _self = this,
-    		avg = _self._getAvgLength(),
-    		offset =  avg * index;
-    	//if(avg &gt;= 0){
-    	offset += avg/2;
-    	/*}else{
-    		offset -= avg/2;
-    	}*/
-    	return _self._appendEndOffset(offset) + _self._getStartCoord();
+    	return this._getOffsetByTicks(index);
     },
 <span id='Chart-Axis-Category-method-getValue'>    /**
 </span>     * 根据画板上的点获取坐标轴上的值，对已分类坐标轴来说就是获取其中的一个分类
@@ -106,26 +117,66 @@ Util.augment(Category,{
      */
     getValue : function(offset){
         var _self = this,
-            index = _self.getSnapIndex(offset),
-            categories = _self.get(&#39;categories&#39;);
+            ticks = _self.get(&#39;ticks&#39;),
+            categories = _self.get(&#39;categories&#39;),
+            pointCache = _self.get(&#39;pointCache&#39;),
+            index;
+        //如果分类和ticks一一对应
+        if(categories.length &lt;= ticks.length){
+            index = _self.getSnapIndex(offset);
+        }else{
+            var start = pointCache[0],
+                distancd = offset - start,
+                count = _self.get(&#39;tickAlignCenter&#39;) ? categories.length + 1 : categories.length,
+                avg = _self._getAvgLength(count);
+            index = Math.round(distancd/avg);
+        }
+         
         return categories[index];
     },
-<span id='Chart-Axis-Category-method-changeAxis'>    /**
-</span>     * 改变坐标轴，对于分类坐标轴，只能更改 categories
-     * &lt;code&gt;
-     *     axis.changeAxis({
-     *         categories : categories
-     *     });
-     * &lt;/code&gt;
+<span id='Chart-Axis-Category-method-getOffset'>    /**
+</span>     * 将指定的节点转换成对应的坐标点
+     * @param  {*} value 数据值或者分类 
+     * @return {Number} 节点坐标点（单一坐标）x轴的坐标点或者y轴的坐标点
      */
-    changeAxis : function(info){
+    getOffset : function(value){
+        var _self = this,
+            categories = _self.get(&#39;categories&#39;),
+            index = Util.indexOf(categories,value);
 
+        return _self._getOffsetByCategories(index);
     },
-    _getAvgLength : function(){
+    _getOffsetByIndex : function(index,count){
+        var _self = this,
+            avg = _self._getAvgLength(count),
+            offset =  avg * index;
+        if(_self.get(&#39;tickAlignCenter&#39;)){
+            offset += avg/2;
+        }
+        return _self._appendEndOffset(offset) + _self._getStartCoord();
+    },
+    _getOffsetByCategories : function(index){
+        var _self = this,
+            categories = _self.get(&#39;categories&#39;),
+            count = _self.get(&#39;tickAlignCenter&#39;) ? categories.length + 1 : categories.length;
+        return _self._getOffsetByIndex(index,count);
+    },
+    _getOffsetByTicks : function(index){
+        var _self = this,
+            ticks = _self.get(&#39;ticks&#39;),
+            categories = _self.get(&#39;categories&#39;),
+            tick = ticks[index],
+            tickIndex = Util.indexOf(categories,tick);
+
+        if(tickIndex != -1){
+            return _self._getOffsetByCategories(tickIndex)
+        }
+        return _self._getOffsetByIndex(index);
+    },
+    _getAvgLength : function(count){
     	var _self = this,
     		length = _self._getLength(),
-    		ticks = _self.get(&#39;ticks&#39;),
-    		count = ticks.length,
+    		count = count || _self.get(&#39;ticks&#39;).length,
     		avg = (length / (count - 1));
     	return avg;
     },
@@ -138,13 +189,10 @@ Util.augment(Category,{
     		ortho = _self._getOrthoCoord(),
     		avg = _self._getAvgLength(),
     		current = _self.getOffsetByIndex(index);
-    	
-    	/*if(avg &gt;= 0){
-    		current -= avg/2;
-    	}else{
-    		current += avg/2;
-    	}*/
-      current -= avg/2;
+
+        if(_self.get(&#39;tickAlignCenter&#39;)){
+            current -= avg/2;
+        }
     	if(_self.isVertical()){
     		return {
     			x : ortho,

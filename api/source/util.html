@@ -571,6 +571,9 @@ function getEventObj(ev){
   Util.each(ARR_EV,function(key){
     rst[key] = ev[key];
   });
+  rst.stopPropagation = function(){
+    window.event.cancelBubble = true;  
+  }
   return rst;
 }
 
@@ -673,6 +676,11 @@ Util.mix(Util,{
     }
     return parseFloat(height);
   },
+<span id='Chart-Util-method-getOuterWidth'>  /**
+</span>   * 获取外层宽度
+   * @param  {HTMLElement} el  dom节点
+   * @return {Number} 宽度
+   */
   getOuterWidth : function(el){
     var width = Util.getWidth(el),
       bLeft = parseFloat(Util.getStyle(el,&#39;borderLeftWidth&#39;)) || 0,
@@ -682,6 +690,11 @@ Util.mix(Util,{
 
     return width + bLeft + bRight + pLeft + pRight;
   },
+<span id='Chart-Util-method-getOuterHeight'>  /**
+</span>   * 获取外城高度
+   * @param  {HTMLElement} el  dom节点
+   * @return {Number} 高度
+   */
   getOuterHeight : function(el){
      var height = Util.getHeight(el),
       bTop = parseFloat(Util.getStyle(el,&#39;borderTopWidth&#39;)) || 0,
@@ -703,6 +716,12 @@ Util.mix(Util,{
     }
     return el.currentStyle[name];
   },
+<span id='Chart-Util-method-addEvent'>  /**
+</span>   * 添加事件
+   * @param {HTMLElement}   node  节点
+   * @param {String}   type 事件名称
+   * @param {Function} fn   回调函数
+   */
   addEvent : function( obj, type, fn ) {
     if ( obj.attachEvent ) {
         obj[&#39;e&#39;+type+fn] = fn;
@@ -714,6 +733,12 @@ Util.mix(Util,{
     } else
         obj.addEventListener( type, fn, false );
   },
+<span id='Chart-Util-method-removeEvent'>  /**
+</span>   * 移除事件
+   * @param {HTMLElement}   node  节点
+   * @param {String}   type 事件名称
+   * @param {Function} fn   回调函数
+   */
   removeEvent : function( obj, type, fn ) {
       if ( obj.detachEvent ) {
           obj.detachEvent( &#39;on&#39;+type, obj[type+fn] );
@@ -741,6 +766,15 @@ Util.mix(Util,{
   stopStep : function(handler){
     stopStep(handler);
   },
+<span id='Chart-Util-method-animPath'>  /**
+</span>   * path执行动画
+   * @param  {Chart.Canvas.Shape.Path}   pathShape path图形
+   * @param  {String|Array}   toPath  变换的path
+   * @param  {Number}   reserve   附加几个节点
+   * @param  {Number}   duration  执行时间
+   * @param  {String}   easing    方法
+   * @param  {Function} callback  回调函数
+   */
   animPath : function(pathShape,toPath,reserve,duration,easing,callback){
     //vml阻止动画执行
     /**/
@@ -750,6 +784,11 @@ Util.mix(Util,{
     }
     reserve = reserve || 0;
     duration = duration || 400;
+
+    if(!toPath){
+      after();
+      return;
+    }
 
     var curPath = pathShape.getPath(),
       endPath = Util.parsePathString(toPath),

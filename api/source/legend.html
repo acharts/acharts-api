@@ -26,18 +26,14 @@ var Util = require(&#39;achart-util&#39;),
   LINE_HEIGHT = 15,
   PADDING = 5;
 
-function min(x,y){
-  return x &gt; y ? y : x;
-}
-function max(x,y){
-  return x &gt; y ? x : y;
-}
-
 <span id='Chart-Legend'>/**
 </span> * @class Chart.Legend
  * 图例
- * @extends Chart.PlotItem
- * @mixins Chart.ActivedGroup
+ *
+ * - &lt;a href=&quot;http://spmjs.io/docs/achart-legend/&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ * - &lt;a href=&quot;http://spmjs.io/docs/achart-legend/wiki/&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
+ * @extends Chart.Plot.Item
  */
 var Legend = function(cfg){
   Legend.superclass.constructor.call(this,cfg);
@@ -57,6 +53,18 @@ Legend.ATTRS = {
    * @type {Object}
    */
   itemCfg : null,
+
+<span id='Chart-Legend-property-checkable'>  /**
+</span>   * 是否可以勾选
+   * @type {Boolean}
+   */
+  checkable : true,
+
+<span id='Chart-Legend-property-leaveChecked'>  /**
+</span>   * 是否保留最后一项勾选
+   * @type {Boolean}
+   */
+  leaveChecked : true,
 
 <span id='Chart-Legend-property-layout'>  /**
 </span>   * 布局方式： horizontal，vertical
@@ -87,6 +95,41 @@ Legend.ATTRS = {
       fill : &#39;#fff&#39;
     }
 
+<span id='Chart-Legend-event-itemover'>  /**
+</span>   * @event itemover 
+   * 图例项鼠标进入
+   * @param {Object} ev 事件对象
+   * @param {Chart.Legend.Item}  ev.item 图例项
+   */
+  
+<span id='Chart-Legend-event-itemout'>  /**
+</span>   * @event itemout 
+   * 图例项鼠标 out
+   * @param {Object} ev 事件对象
+   * @param {Chart.Legend.Item} ev.item  图例项
+   */
+  
+<span id='Chart-Legend-event-itemclick'>  /**
+</span>   * @event itemclick 
+   * 图例项鼠标点击
+   * @param {Object} ev 事件对象
+   * @param {Chart.Legend.Item} ev.item  图例项
+   */
+
+
+<span id='Chart-Legend-event-itemchecked'>   /**
+</span>   * @event itemchecked
+   * 图例项勾选
+   * @param {Object} ev 事件对象
+   * @param {Chart.Legend.Item} ev.item  图例项
+   */
+  
+<span id='Chart-Legend-event-itemunchecked'>  /**
+</span>   * @event itemunchecked
+   * 图例项取消勾选
+   * @param {Object} ev 事件对象
+   * @param {Chart.Legend.Item} ev.item  图例项
+   */
 }
 
 Util.extend(Legend,PlotItem);
@@ -102,6 +145,7 @@ Util.augment(Legend,{
   bindUI : function(){
     Legend.superclass.bindUI.call(this);
     var _self = this;
+
     _self.on(&#39;mousemove&#39;,function(ev){
       if(ev.stopPropagation){
         ev.stopPropagation();
@@ -109,19 +153,103 @@ Util.augment(Legend,{
         window.event.cancelBubble = true;  
       }
     });
+    
+    _self._bindOverOut();
+    _self._bindClick();
   },
+  //绑定over ,out
+  _bindOverOut : function(){
+    var _self = this;
+
+    _self.on(&#39;mouseover&#39;,function(ev){
+      var item = _self.getItemByNode(ev.target);
+      if(item){
+        _self.fire(&#39;itemover&#39;,{item : item});
+      }
+    });
+    _self.on(&#39;mouseout&#39;,function(ev){
+      var item = _self.getItemByNode(ev.target);
+      if(item){
+        _self.fire(&#39;itemout&#39;,{item : item});
+      }
+    });
+  },
+  //绑定点击事件
+  _bindClick : function(){
+    var _self = this,
+      checkable = _self.get(&#39;checkable&#39;);
+    if(checkable){
+      _self.on(&#39;click&#39;,function(ev){
+        var item = _self.getItemByNode(ev.target);
+        if(item){
+          _self.fire(&#39;itemclick&#39;,{item : item});
+          if(checkable){
+            var checked = item.get(&#39;checked&#39;);
+            if(_self.get(&#39;leaveChecked&#39;) &amp;&amp; checked &amp;&amp; _self._getLeaveCount() == 1){
+              return;
+            }
+            item.set(&#39;checked&#39;,!checked);
+            if(checked){
+              _self.fire(&#39;itemunchecked&#39;,{item : item});
+            }else{
+              _self.fire(&#39;itemchecked&#39;,{item : item});
+            }
+          }
+        }
+      });
+    }
+  },
+<span id='Chart-Legend-method-getItemByNode'>  /**
+</span>   * @protected
+   * 根据DOM 获取图例子项
+   */
+  getItemByNode : function(node){
+    var _self = this,
+      itemsGroup = _self.get(&#39;itemsGroup&#39;),
+      items = itemsGroup.get(&#39;children&#39;),
+      rst = null;
+
+    Util.each(items,function(item){
+      if(item.containsElement(node)){
+        rst = item;
+        return false;
+      }
+    });
+
+    return rst;
+  },
+
+  _getLeaveCount : function(){
+    var _self = this,
+      itemsGroup = _self.get(&#39;itemsGroup&#39;),
+      items = itemsGroup.get(&#39;children&#39;),
+      tmpArr = [];
+
+    tmpArr = Util.filter(items,function(item){
+      return item.get(&#39;checked&#39;);
+    })
+    return tmpArr.length;
+  },
+
   _renderItems : function(){
     var _self = this,
       items = _self.get(&#39;items&#39;),
       itemsGroup = _self.addGroup();
 
     _self.set(&#39;itemsGroup&#39;,itemsGroup);
+    _self._setItems(items);
+   
+  },
+  //设置子项
+  _setItems : function(items){
+    var _self = this;
 
     Util.each(items,function(item,index){
       _self._addItem(item,index);
     });
     if(items &amp;&amp; items.length){
       _self.resetPosition();
+      _self.resetBorder();
     }
   },
 <span id='Chart-Legend-method-addItem'>  /**
@@ -135,6 +263,19 @@ Util.augment(Legend,{
     _self._addItem(item,items.length);
     _self.resetBorder();
     _self.resetPosition();
+  },
+<span id='Chart-Legend-method-setItems'>  /**
+</span>   * 设置选项
+   * @param {Array} items 选项集合
+   */
+  setItems : function(items){
+    var _self = this,
+      itemsGroup = _self.get(&#39;itemsGroup&#39;);
+    itemsGroup.clear();
+
+    _self.set(&#39;items&#39;,items);
+    _self._setItems(items);
+
   },
   //添加图例
   _addItem : function(item,index){
@@ -188,8 +329,12 @@ Util.augment(Legend,{
   resetPosition : function(){
     var _self = this,
       align = _self.get(&#39;align&#39;),
-      plotRange = _self.get(&#39;plotRange&#39;),
-      top = plotRange.tl,
+      plotRange = _self.get(&#39;plotRange&#39;);
+
+    if(!plotRange){
+      return;
+    }
+    var  top = plotRange.tl,
       end = plotRange.br,
       dx = _self.get(&#39;dx&#39;),
       dy = _self.get(&#39;dy&#39;),
@@ -201,11 +346,11 @@ Util.augment(Legend,{
         y = top.y;
         break;
       case &#39;left&#39;:
-        x = top.x - width;
+        x = top.x;
         y = (top.y + end.y)/2;
         break;
       case &#39;right&#39;:
-        x = end.x;
+        x = end.x - width;
         y = (top.y + end.y)/2;
         break;
       case &#39;bottom&#39;:

@@ -15,404 +15,300 @@
   </script>
 </head>
 <body onload="prettyPrint(); highlight();">
-  <pre class="prettyprint lang-js">/*
- *
- * @line图的tag
- *
- * */
-
-var
-    Cartesian = require(&#39;./cartesian&#39;),
-    Util = require(&#39;../../util&#39;);
-
-function trySet(obj,name,value){
-    if(obj &amp;&amp; !obj[name]){
-        obj[name] = value;
-    }
-}
-
-<span id='Chart-Series-Flag'>/**
-</span> * @class Chart.Series.Flag
- * 使用线连接数据的数据图序列
- * @extends Chart.Series.Cartesian
+  <pre class="prettyprint lang-js"><span id='Util'>/**
+</span> * @fileOverview 图形标记，包含文本和连接线
+ * @ignoreig
  */
-function Flag(cfg){
-    Flag.superclass.constructor.call(this,cfg);
-}
 
-Util.extend(Flag,Cartesian);
+var Util = require(&#39;achart-util&#39;),
+  Item = require(&#39;achart-plot&#39;).Item;
 
-Flag.ATTRS = {
-
-    type : &#39;flag&#39;,
-    elCls : &#39;x-chart-flag-series&#39;,
-    zIndex: 6,
-<span id='Chart-Series-Flag-property-flag'>    /**
-</span>     * 配置
-     * @type {Object}
-     */
-    flag : null,
-
-<span id='Chart-Series-Flag-property-distance'>    /**
-</span>     * y偏离
-     * @type {Number}
-     */
-    distance: 0,
-
-<span id='Chart-Series-Flag-property-line'>    /**
-</span>     * 笔触
-     * @type {Object}
-     */
-    line: null,
-
-<span id='Chart-Series-Flag-property-custom'>    /**
-</span>     * 使用html
-     * @type {bool}
-     */
-
-    custom: false,
-
-<span id='Chart-Series-Flag-property-title'>    /**
-</span>     * 使用html时候的内容
-     * @type {String}
-     */
-
-    title: null
-
+<span id='Chart-Flags-Flag'>/**
+</span> * @class Chart.Flags.Flag
+ * 图形标记，包含文本和连接线
+ */
+var Flag = function (cfg) {
+  Flag.superclass.constructor.call(this,cfg);
 };
 
+
+Flag.ATTRS = {
+<span id='Chart-Flags-Flag-property-title'>  /**
+</span>   * 显示的文本
+   * @type {String}
+   */
+  title : &#39;&#39;,
+<span id='Chart-Flags-Flag-property-titleCfg'>  /**
+</span>   * 显示的文本配置信息
+   * @type {Object}
+   */
+  titleCfg: null,
+<span id='Chart-Flags-Flag-property-text'>  /**
+</span>   * tooltip显示的文本
+   * @type {String}
+   */
+  text: &#39;&#39;,
+<span id='Chart-Flags-Flag-property-line'>  /**
+</span>   * 连接线的配置信息
+   * @type {Object}
+   */
+  line : null,
+<span id='Chart-Flags-Flag-property-distance'>  /**
+</span>   * y偏离
+   * @type {Number}
+   */
+  distance: 0,
+<span id='Chart-Flags-Flag-property-shapeCfg'>  /**
+</span>   * 图形的配置信息
+   * @type {Object}
+   */
+  shapeCfg: {
+    
+  },
+<span id='Chart-Flags-Flag-property-shapeType'>  /**
+</span>   * 类型
+   * @type {String}
+   */
+  shapeType : &#39;&#39;,
+
+<span id='Chart-Flags-Flag-property-point'>  /**
+</span>   * 关联的点
+   * @type {Object}
+   */
+  point : null,
+
+  //缓存
+  cash: {}
+};
+
+Util.extend(Flag,Item);
+
 Util.augment(Flag,{
-<span id='Chart-Series-Flag-method-_getPoints'>    /**
-</span>     *  重写获取point函数
-     */
-    _getPoints : function(){
-        var _self = this,
-            data = _self.get(&#39;data&#39;),
-            xField = _self.get(&#39;xField&#39;),
-            yField = _self.get(&#39;yField&#39;),
-            onSeries = _self.get(&#39;onSeries&#39;),
-            parent = _self.get(&#39;parent&#39;),
-            distance = _self.get(&#39;distance&#39;),
-            series = parent.find(onSeries),
-            flagAttrs = _self.get(&#39;flag&#39;),
-            lineAttrs = _self.get(&#39;line&#39;),
-            xAxis = _self.get(&#39;xAxis&#39;),
-            yAxis = _self.get(&#39;yAxis&#39;),
-            points = [];
-
-        cfg = Util.mix({},flagAttrs,lineAttrs);
-        Util.each(data,function(item,index){
-            var point,sameNum = 0;
-            if(Util.isObject(item)){
-                var xValue = item[xField];
-
-                //不存在落点线条 则落到坐标轴上面
-                if(!series || !series.get(&#39;visible&#39;)){
-                    var _x = xAxis.getOffset(xValue),
-                        _y = yAxis.getStartOffset();
-
-                    point = {
-                        x: _x,
-                        y: _y,
-                        xValue: xValue
-                    }
-                }
-                else{
-                    point = series.findPointByValue(xValue);
-                }
-
-                if(!point) return true;
-
-                //若存在坐标轴一样的flag  往上堆叠
-                Util.each(data,function(newItem,newIndex){
-                    if(newIndex &lt; index &amp;&amp; item[xField] == newItem[xField]){
-                        sameNum ++;
-                    }
-                })
-
-                var finalDistance = distance &gt; 0 ? (distance * (sameNum + 1) + cfg.r * 2 * sameNum) : (distance * (sameNum + 1) - cfg.r * 2 * sameNum);
-                point = Util.mix({},point,{
-                    y: point.y + finalDistance,
-                    index: sameNum
-                });
-
-                point.obj = item;
-            }
-            _self.processPoint(point,index);
-            points.push(point);
-        });
-
-        return points;
+    //渲染控件
+    renderUI : function(){
+        var _self = this;
+        Flag.superclass.renderUI.call(_self);
+        _self.drawFlag();
     },
-<span id='Chart-Series-Flag-method-changeShapes'>    /**
-</span>     *  重写legend导致的画面变动
+<span id='Chart-Flags-Flag-method-drawFlag'>    /**
+</span>     * 绘制flag
      */
-    changeShapes : function(points,animate){
-        var _self = this,
-            flagAttrs = _self.get(&#39;flag&#39;),
-            lineAttrs = _self.get(&#39;line&#39;),
-            cfg = Util.mix({},flagAttrs,lineAttrs),
-            custom = _self.get(&#39;custom&#39;),
-            distance = _self.get(&#39;distance&#39;),
-            groups = _self.get(&#39;children&#39;);
-
-        points = points || this._getPoints();
-
-        if(custom){
-            var customDiv = _self.get(&#39;customDiv&#39;);
-            if(customDiv){
-                Util.each(customDiv.childNodes,function(flag,index){
-                    var point = points[index];
-
-                    if(!point){
-                        flag.style.display = &quot;none&quot;;
-                        return true;
-                    }
-
-                    var flagWidth = Util.getWidth(flag),
-                        x = point.x,
-                        y = point.y,
-                        flagHeight = Util.getHeight(flag),
-                        left = x - flagWidth/2,
-                        top = y + distance - flagHeight/2;
-
-                    flag.style.cssText = &quot;z-index:5;position:absolute;left:&quot;+ left +&quot;px;top:&quot;+ top +&quot;px&quot;;
-                });
-                /*Util.each(points,function(point,index){
-                 var flag = customDiv.childNodes[index],
-                 flagWidth = Util.getWidth(flag),
-                 x = point.x,
-                 y = point.y,
-                 flagHeight = Util.getHeight(flag),
-                 left = x - flagWidth/2,
-                 top = y + distance - flagHeight/2
-                 flag.style.cssText = &quot;z-index:5;position:absolute;left:&quot;+ left +&quot;px;top:&quot;+ top +&quot;px&quot;;
-                 });*/
-            }
-        }else{
-            if(groups){
-                Util.each(groups,function(group,index){
-
-                    var point = points[index];
-
-                    if(!point){
-                        group.hide();
-                        return true;
-                    }
-
-                    var x = point.x,
-                        y = point.y,
-                        shapes = group.get(&#39;children&#39;),
-                        circle = shapes[0],line = shapes[1];
-
-                    circle.attr({
-                        cx: x,
-                        cy: distance &gt; 0 ? (y + cfg.r) : (y - cfg.r)
-                    });
-                    line.attr({
-                        x1: x,
-                        y1: y,
-                        x2: x,
-                        y2: y - distance
-                    });
-
-                    group.show();
-                });
-            }
-        }
+    drawFlag: function(){
+        var _self = this;
+        _self._drawLine();
+        _self._drawShape();
+        _self._drawTitle();
     },
-    draw : function(points,callback){
+    //画线
+    _drawLine: function(){
         var _self = this,
-            animate = _self.get(&#39;animate&#39;),
-            duration = _self.get(&#39;duration&#39;);
+            cash = _self.get(&#39;cash&#39;);
+        var line = _self.addShape(&#39;line&#39;,_self.__getLineAttr());
 
-        if(!animate) {
-            Util.each(points, function (item, index) {
-                _self._drawShape(item, index);
-            });
-
-            _after();
-        }else{
-            var onSeries = _self.get(&#39;onSeries&#39;),
-                parent = _self.get(&#39;parent&#39;);
-
-            var seriesPoints = _self._getPoints();
-
-            var cur = 0,
-                sub = [],
-                count = seriesPoints.length;
-
-            //动画生成线和对应的点
-            Util.animStep(duration,function(factor){
-                var pre = cur;
-                cur = parseInt((factor) * count,10);
-                if(cur &gt; count - 1){
-                    cur = count - 1;
-                }
-
-                if(cur != pre){
-                    sub = points.slice(0,cur + 1);
-                    for(var i = pre; i&lt; cur; i++){
-                        _findFlagToDraw(seriesPoints[i]);
-                    }
-                }
-                if(factor == 1){
-                    _findFlagToDraw(seriesPoints[cur]);
-                }
-            },_after);
-        }
-
-        function _after(){
-            _self.bindFlagEvent();
-            callback &amp;&amp; callback();
-        }
-
-        function _findFlagToDraw(currPoint){
-            Util.each(points, function (item, index) {
-                if(item.x == currPoint.x &amp;&amp; !item.isDraw){
-                    _self._drawShape(item, index);
-                    item.isDraw = true; //防止堆叠时候x值相同而重复画
-                }
-            });
-        }
-
+        cash.line = line;
     },
-<span id='Chart-Series-Flag-method-_drawShape'>    /**
-</span>     *  根据点绘制
-     */
-    _drawShape: function(point,index){
+    //获取线的配置
+    __getLineAttr: function(){
         var _self = this,
-            flagAttrs = _self.get(&#39;flag&#39;),
-            lineAttrs = _self.get(&#39;line&#39;),
-            custom = _self.get(&#39;custom&#39;),
+            lineAttr = _self.get(&#39;line&#39;),
+            point = _self.get(&#39;point&#39;),
             x = point.x,
             y = point.y,
+            distance = _self.get(&#39;distance&#39;);
+
+        //line
+        var cfg = Util.mix(lineAttr,{
+            x1: x,
+            y1: y,
+            x2: x,
+            y2: distance + y
+        });
+
+        distance &lt;= 0 ?
+             _self.set(&#39;bottomY&#39;, y)
+            :_self.set(&#39;topY&#39;, y)
+
+        return cfg;
+    },
+    //画图形
+    _drawShape: function(){
+        var _self = this,
+            cash = _self.get(&#39;cash&#39;);
+        var shape = _self.addShape(_self.__getShapeAttr());
+
+        cash.shape = shape;
+    },
+    //获取图形配置
+    __getShapeAttr: function(){
+        var _self = this,
+            point = _self.get(&#39;point&#39;),
+            x = point.x,
+            y = point.y,
+            type = _self.get(&#39;shapeType&#39;),
+            shape = _self.get(&#39;shapeCfg&#39;),
             distance = _self.get(&#39;distance&#39;),
-            flagShape = _self.get(&#39;flagShape&#39;),
-            cfg = Util.mix({},flagAttrs,lineAttrs);
+            cfg;
 
-        //自定义html
-        if(custom){
-            var title = _self.get(&#39;data&#39;)[index][&#39;html&#39;] || _self.get(&#39;html&#39;),
-                html = &#39;&lt;div class=&quot;ac-flags&quot;&gt;&lt;/div&gt;&#39;,
-                flag = Util.createDom(&quot;&lt;span&gt;&quot; + title + &quot;&lt;/span&gt;&quot;),
-                outterNode = _self.get(&#39;canvas&#39;).get(&#39;node&#39;).parentNode,
-                customDiv = _self.get(&#39;customDiv&#39;);
+        var width = shape.width || 24,
+            height = shape.height || 24;
 
-            outterNode.style.position = &#39;relative&#39;;
+        switch (type){
+            case &#39;rect&#39;:
+                cfg = Util.mix(shape,{
+                    //矩形
+                    x : x - width/2,
+                    y : distance &gt; 0 ? y + distance  : (y  - height + distance),
+                    width : width,
+                    height: height
+                });
+                distance &lt;= 0 ?
+                    _self.set(&#39;topY&#39;, cfg.y)
+                    :_self.set(&#39;bottomY&#39;, cfg.y + height)
+                break;
+            case &#39;image&#39;:
+                cfg = Util.mix(shape,{
+                    //图形
+                    x : x - width/2,
+                    y : distance &gt; 0 ? (y + distance)  : (y + distance - height),
+                    width : width,
+                    height: height
+                });
+                distance &lt;= 0 ?
+                    _self.set(&#39;topY&#39;, cfg.y)
+                    :_self.set(&#39;bottomY&#39;, cfg.y + height)
+                break;
+            default :
+                type = &#39;circle&#39;;
+                cfg = Util.mix(shape,{
+                    //圆形
+                    cx: x,
+                    cy: distance &gt; 0 ? (y + shape.r + distance) : (y - shape.r + distance)
+                });
+                distance &lt;= 0 ?
+                    _self.set(&#39;topY&#39;, cfg.cy - shape.r)
+                    :_self.set(&#39;bottomY&#39;, cfg.cy + shape.r)
+                break;
+        }
+        return {
+            type : type,
+            attrs : cfg
+        };
+    },
+    //添加文字
+    _drawTitle: function(){
+        var _self = this,
+            cash = _self.get(&#39;cash&#39;);
 
-            //判断是否存在 不存在则追加并绑定事件
-            if(!customDiv){
-                customDiv = Util.createDom(html);
-                outterNode.appendChild(customDiv);
-
-                _self.bindTooltip(customDiv);
-                _self.bindDomEvent(customDiv);
-
-            }
-            customDiv.appendChild(flag);
-            var flagWidth = Util.getWidth(flag),
-                flagHeight = Util.getHeight(flag),
-                left = x - flagWidth/2,
-                top = y + distance - flagHeight/2
-            flag.style.cssText = &quot;z-index:5;position:absolute;left:&quot;+ left +&quot;px;top:&quot;+ top +&quot;px&quot;;
-
-            _self.set(&#39;customDiv&#39;,customDiv);
-        }else{
-
-            var group = _self.addGroup();
-            //circle
-            cfg = Util.mix(cfg,{
-                cx: x,
-                cy: distance &gt; 0 ? (y + cfg.r) : (y - cfg.r)
-            });
-            group.addShape(&#39;circle&#39;,cfg);
-
-            //line
-            cfg = Util.mix(cfg,{
-                x1: x,
-                y1: y,
-                x2: x,
-                y2: y - distance
-            });
-            group.addShape(&#39;line&#39;,cfg);
-
-            //用于changeShape时候对应points和group，不使用index的原因是考虑到stock chart
-            console.log(point)
-            group.set(&#39;xValue&#39;,point.xValue);
-            group.set(&#39;index&#39;,point.index);
+        var cfg = _self.__getTitleAttr();
+        if(cfg){
+            var title = _self.addShape(&#39;text&#39;, _self.__getTitleAttr());
+            cash.title = title;
         }
     },
-<span id='Chart-Series-Flag-method-bindFlagEvent'>    /**
-</span>     * 开放事件接口
+    //获取文字配置
+    __getTitleAttr: function(){
+        var _self = this,
+            title = _self.get(&#39;title&#39;),
+            shape = _self.get(&#39;shapeCfg&#39;),
+            titleCfg = _self.get(&#39;titleCfg&#39;),
+            point = _self.get(&#39;point&#39;),
+            x = point.x,
+            y = point.y,
+            distance = _self.get(&#39;distance&#39;);
+
+        var width = shape.width || 24,
+            height = shape.height || 24;
+
+        if(!title) return;
+
+        var cfg = Util.mix(titleCfg,{
+            text: title,
+            x : x ,
+            y : distance &gt; 0 ? (y + distance + height/2)  : (y + distance - height/2)
+        });
+
+        return cfg;
+    },
+    //删除
+    removeFlag: function(){
+        var _self = this,
+            cash = _self.get(&#39;cash&#39;);
+        cash.line &amp;&amp; cash.line.remove();
+        cash.shape &amp;&amp; cash.shape.remove();
+        cash.title &amp;&amp; cash.title.remove();
+
+        _self.remove();
+    },
+<span id='Chart-Flags-Flag-method-change'>    /**
+</span>     * 修改flag配置，会触发重绘
+     * @param {Object} item 新的配置信息
      */
-    bindFlagEvent: function(){
+    change: function(item){
         var _self = this;
+        Util.mix(_self._attrs,item);
 
-        _self.on(&#39;click&#39;,function(ev){
-            _self.fireUp(&#39;flagclick&#39;,ev);
-        });
-        _self.on(&#39;mouseover&#39;,function(ev){
-            _self.fireUp(&#39;flagmouseover&#39;,ev);
-        });
-        _self.on(&#39;mouseout&#39;,function(ev){
-            _self.fireUp(&#39;flagmouseout&#39;,ev);
-        });
+        _self.repaint();
     },
-<span id='Chart-Series-Flag-method-bindTooltip'>    /**
-</span>     *  自定义事件时，添加tooltip
+<span id='Chart-Flags-Flag-method-repaint'>    /**
+</span>     * 重绘
      */
-    bindTooltip: function(element){
+    repaint: function(){
         var _self = this,
-            parent = _self.get(&#39;parent&#39;);
+            cash = _self.get(&#39;cash&#39;);
 
-        Util.addEvent(element,&#39;mouseover&#39;,function(){
-            if(parent.setActivedItem){
-                if(!parent.isItemActived(_self)){
-                    parent.setActivedItem(_self);
-                }
-            }
-        });
+        cash.line &amp;&amp; cash.line.remove();
+        cash.shape &amp;&amp; cash.shape.remove();
+        cash.title &amp;&amp; cash.title.remove();
+
+        //重绘线
+        _self._drawLine();
+        //重绘shape
+        _self._drawShape();
+        //重绘图形
+        _self._drawTitle();
     },
-<span id='Chart-Series-Flag-method-bindDomEvent'>    /**
-</span>     * 自定义flag开放事件接口
-     */
-    bindDomEvent: function(element){
-        var _self = this;
-        Util.addEvent(element,&#39;click&#39;,function(ev){
-            _self.fireUp(&#39;flagclick&#39;,ev);
-        });
-        Util.addEvent(element,&#39;mouseover&#39;,function(ev){
-            _self.fireUp(&#39;flagmouseover&#39;,ev);
-        });
-        Util.addEvent(element,&#39;mouseout&#39;,function(ev){
-            _self.fireUp(&#39;flagmouseout&#39;,ev);
-        });
-    },
-<span id='Chart-Series-Flag-method-show'>    /**
-</span>     * 显示
-     */
-    show : function(){
+    //为了堆叠，根据配置获取topY和bottomY
+    changeStackCfg: function(item){
         var _self = this,
-            customDiv = _self.get(&#39;customDiv&#39;);
-        _self.get(&#39;el&#39;).show();
-        _self.set(&#39;visible&#39;,true);
+            point = item.point,
+            y = point.y,
+            distance = item.distance,
+            shape = item.shapeCfg,
+            type = item.shapeType,
+            cfg;
 
-        if(customDiv){
-            customDiv.style.display = &#39;block&#39;;
-        }
-    },
-<span id='Chart-Series-Flag-method-hide'>    /**
-</span>     * 隐藏
-     */
-    hide : function(){
-        var _self = this,
-            customDiv = _self.get(&#39;customDiv&#39;);
-        _self.get(&#39;el&#39;).hide();
-        _self.set(&#39;visible&#39;,false);
+        distance &lt;= 0 ?
+            _self.set(&#39;bottomY&#39;, y)
+            :_self.set(&#39;topY&#39;, y);
 
-        if(customDiv){
-            customDiv.style.display = &#39;none&#39;;
+        var height = shape.height || 24;
+
+        switch (type){
+            case &#39;rect&#39;:
+                cfg = Util.mix(shape,{
+                    y : distance &gt; 0 ? y + distance  : (y  - height + distance),
+                });
+                distance &lt;= 0 ?
+                    _self.set(&#39;topY&#39;, cfg.y)
+                    :_self.set(&#39;bottomY&#39;, cfg.y + height)
+                break;
+            case &#39;image&#39;:
+                cfg = Util.mix(shape,{
+                    y : distance &gt; 0 ? (y + distance)  : (y + distance - height)
+                });
+                distance &lt;= 0 ?
+                    _self.set(&#39;topY&#39;, cfg.y)
+                    :_self.set(&#39;bottomY&#39;, cfg.y + height)
+                break;
+            default :
+                type = &#39;circle&#39;;
+                cfg = Util.mix(shape,{
+                    cy: distance &gt; 0 ? (y + shape.r + distance) : (y - shape.r + distance)
+                });
+                distance &lt;= 0 ?
+                    _self.set(&#39;topY&#39;, cfg.cy - shape.r)
+                    :_self.set(&#39;bottomY&#39;, cfg.cy + shape.r)
+                break;
         }
     }
 });

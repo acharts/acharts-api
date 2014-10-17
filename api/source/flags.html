@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='Util'>/**
+</span> * @fileOverview 图形标记，包含文本和连接线
+ * @ignore
+ */
+
+var Util = require(&#39;achart-util&#39;),
+    Flag = require(&#39;./flag&#39;),
+    Group = require(&#39;achart-actived&#39;).Group,
+    PlotItem = require(&#39;achart-plot&#39;).Item;
+
+<span id='Chart-Flags'>/**
+</span> * @class Chart.Flags
+ * 图形标记，包含文本和连接线
+ *
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/latest/api/stacked.html&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/latest/wiki/07-stacked.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
+ * @extends Chart.Plot.Item
+ */
+var Flags = function(cfg){
+    Flags.superclass.constructor.call(this,cfg);
+};
+
+Util.extend(Flags,PlotItem);
+Util.mixin(Flags,[Group]);
+
+Flags.ATTRS = {
+    elCls : &#39;x-chart-flags&#39;,
+    zIndex : 6,
+<span id='Chart-Flags-property-flag'>    /**
+</span>     * 标记的配置项
+     * @type {Object}
+     */
+    flag : null,
+<span id='Chart-Flags-property-items'>    /**
+</span>     *  初始的flag集合配置信息
+     *  @type {Array}
+     */
+    items : null,
+<span id='Chart-Flags-property-flagGroups'>    /**
+</span>     * @private
+     */
+    flagGroups : null
+};
+
+Util.augment(Flags,{
+    //渲染控件
+    renderUI : function(){
+        var _self = this;
+        Flags.superclass.renderUI.call(_self);
+        _self._drawFlags();
+    },
+    bindUI :function(){
+        var _self =this;
+        _self.on(&#39;click&#39;,function(ev){
+            var flag = _self.findBy(function(item){
+                return item.containsElement &amp;&amp; item.containsElement(ev.target)
+            });
+            _self.fire(&#39;flagclick&#39;,{flag : flag});
+        });
+
+        _self.on(&#39;mouseover&#39;,function(ev){
+            var flag = _self.findBy(function(item){
+                return item.containsElement &amp;&amp; item.containsElement(ev.target)
+            });
+            _self.fire(&#39;flagover&#39;,{flag : flag});
+        });
+
+        _self.on(&#39;mouseout&#39;,function(ev){
+            var flag = _self.findBy(function(item){
+                return item.containsElement &amp;&amp; item.containsElement(ev.target)
+            });
+            _self.fire(&#39;flagout&#39;,{flag : flag});
+        })
+    },
+    //画flag
+    _drawFlags: function(){
+        var _self = this,
+            items = _self.get(&#39;items&#39;),
+            flagGroups = [];
+
+        Util.each(items,function(item){
+            flagGroups.push(_self._addFlag(item));
+        });
+
+        _self.set(&#39;flagGroups&#39;,flagGroups);
+    },
+<span id='Chart-Flags-method-addFlag'>    /**
+</span>     * 添加单个flag
+     * @param {Object} item flag的配置信息
+     */
+    addFlag: function(item){
+        var _self = this,
+            flagGroups = _self.get(&#39;flagGroups&#39;),
+            items = _self.get(&#39;items&#39;);
+
+        if(!items) {
+            items = [];
+            _self.set(&#39;items&#39;,items);
+        }
+
+        items.push(item);
+        var flag = this._addFlag(item);
+
+        flagGroups.push(flag)
+        return flag;
+    },
+    //添加flag
+    _addFlag: function(item){
+        var _self = this,
+            flag = _self.get(&#39;flag&#39;),
+            items = _self.get(&#39;items&#39;);
+
+        var cfg = Util.mix({},flag,item);
+        return _self.addGroup(Flag,cfg);
+    },
+<span id='Chart-Flags-method-removeAll'>    /**
+</span>     * 删除所有flag
+     *
+     */
+    removeAll: function(){
+        var _self = this,
+            flagGroups = _self.get(&#39;flagGroups&#39;);
+
+        Util.each(flagGroups,function(item,index){
+            item.removeFlag();
+        });
+
+        _self.set(&#39;flagGroups&#39;,[]);
+        _self.set(&#39;items&#39;,[]);
+    },
+    //根据索引删除flag
+    removeByIndex: function(index){
+        var _self = this,
+            flagGroups = _self.get(&#39;flagGroups&#39;),
+            items = _self.get(&#39;items&#39;);
+
+        var flag = flagGroups[index];
+
+        if(flag){
+            flag.remove();
+            flagGroups.splice(index,1);
+            items.splice(index,1);
+        }
+    },
+<span id='Chart-Flags-method-change'>    /**
+</span>     * 修改flag
+     * @param {Array} items 新的配置信息
+     * @param {Boolean} animate 进行动画
+     */
+    change: function(items,animate){
+        var _self = this,
+            selfItems = _self.get(&#39;items&#39;),
+            flagGroups = _self.get(&#39;flagGroups&#39;);
+
+        if(animate){
+            var eachItem = items.length &gt; flagGroups.length ? items : flagGroups;
+            var delIndexs = [];
+            Util.each(eachItem,function(model,index){
+                var flag = flagGroups[index],
+                    selfItem = selfItems[index],
+                    item = items[index];
+
+                //flag &amp;&amp; flag.show();
+                //传入的比原先多
+                if(items.length &gt; flagGroups.length &amp;&amp; !flag){
+                    flag = _self.addFlag(item);
+                }else if(items.length &lt; flagGroups.length &amp;&amp; !item) {
+                    delIndexs.push(index);
+                }else {
+                    var point = flag.get(&#39;point&#39;),
+                        originX = point.x,
+                        originY = point.y,
+                        currX = item.point.x,
+                        currY = item.point.y;
+
+                    flag.animate({x: currX - originX,y: currY - originY},400,function(){
+                        flag.animate({x: 0,y: 0});
+                        flag.change(item);
+                    });
+                    selfItem = item;
+                }
+            });
+
+            Util.each(delIndexs,function(item,index){
+                _self.removeByIndex(index);
+            })
+        }else{
+            _self.removeAll();
+            _self.set(&#39;items&#39;,items);
+            _self._drawFlags();
+        }
+    },
+    //为了堆叠，根据配置获取topY和bottomY
+    changeStackCfg: function(index,point){
+        var _self = this,
+            flag = _self.get(&#39;flag&#39;),
+            flagGroups = _self.get(&#39;flagGroups&#39;),
+            items = _self.get(&#39;items&#39;);
+
+        var cfg = Util.mix({},flag,point);
+
+        if(flagGroups[index]){
+            flagGroups[index].changeStackCfg(cfg);
+        }
+    }
+});
+
+module.exports = Flags;</pre>
+</body>
+</html>

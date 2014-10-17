@@ -25,11 +25,15 @@ var Util = require(&#39;achart-util&#39;),
 	PlotItem = require(&#39;achart-plot&#39;).Item,
 	MARKER_WIDTH = 20;
 
-<span id='Chart-LegendItem'>/**
-</span> * @class Chart.LegendItem
+<span id='Chart-Legend-Item'>/**
+</span> * @class Chart.Legend.Item
  * 图例的子项，用于标示其中一个数据序列
- * @extends Chart.PlotItem
- * @mixins Chart.ActivedGroup
+ * 
+ * - &lt;a href=&quot;http://spmjs.io/docs/achart-legend/#legend-item&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ * - &lt;a href=&quot;http://spmjs.io/docs/achart-legend/wiki/legend.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
+ * @extends Chart.Plot.Item
+ * @mixins Chart.Actived
  */
 var LegendItem = function(cfg){
 	LegendItem.superclass.constructor.call(this,cfg);
@@ -38,7 +42,7 @@ var LegendItem = function(cfg){
 LegendItem.ATTRS = {
 
 	elCls : &#39;x-chart-legend-item&#39;,
-<span id='Chart-LegendItem-property-label'>	/**
+<span id='Chart-Legend-Item-property-label'>	/**
 </span>	 * 文本的配置信息，不包括文本内容，文本内容由决定
 	 * @type {Object}
 	 */
@@ -48,37 +52,63 @@ LegendItem.ATTRS = {
 		y : 7,
 		cursor : &#39;pointer&#39;,
 	},
-<span id='Chart-LegendItem-property-legend'>	/**
+<span id='Chart-Legend-Item-property-checked'>  /**
+</span>   * checked 状态
+   * @type {Boolean}
+   */
+  checked : true,
+<span id='Chart-Legend-Item-property-legend'>	/**
 </span>	 * 所属的图例
 	 * @type {Object}
 	 */
 	legend : null,
-<span id='Chart-LegendItem-property-item'>	/**
-</span>	 * 标示的图表元素
-	 * @type {Chart.Canvas.Group}
-	 */
-	item : null,
-<span id='Chart-LegendItem-property-x'>	/**
+	
+<span id='Chart-Legend-Item-property-x'>	/**
 </span>	 * x轴的位置
 	 * @type {Number}
 	 */
 	x : null,
-<span id='Chart-LegendItem-property-y'>	/**
+<span id='Chart-Legend-Item-property-y'>	/**
 </span>	 * y轴的位置
 	 * @type {Number}
 	 */
 	y : null,
 
+<span id='Chart-Legend-Item-property-name'>  /**
+</span>   * 显示的文本
+   * @type {String}
+   */
 	name : null,
 
+<span id='Chart-Legend-Item-property-color'>  /**
+</span>   * 颜色
+   * @type {String}
+   */
 	color : null,
 
+<span id='Chart-Legend-Item-property-symbol'>  /**
+</span>   * marker的类型，默认为null
+   * @type {String}
+   */
 	symbol : null,
 
+<span id='Chart-Legend-Item-property-type'>  /**
+</span>   * 显示的图形代表图形元素，默认 rect
+   * @type {String}
+   */
 	type : &#39;rect&#39;,
 	
-	hideColor : &#39;#CCC&#39;,
+<span id='Chart-Legend-Item-property-uncheckedColor'>  /**
+</span>   * 图形元素隐藏时的颜色
+   * @type {String}
+   */
+	uncheckedColor : &#39;#CCC&#39;,
 
+<span id='Chart-Legend-Item-property-line'>  /**
+</span>   * 图形是线的配置项
+   * @protected
+   * @type {Object}
+   */
 	line : {
 		x1 : 3,
 		y1 : 7,
@@ -86,12 +116,22 @@ LegendItem.ATTRS = {
 		y2 : 7,
 		&quot;stroke-width&quot; : 2
 	},
+<span id='Chart-Legend-Item-property-circle'>  /**
+</span>   * 图形是圆时的配置项
+   * @protected
+   * @type {Object}
+   */
 	circle : {
 		cx : 10,
 		cy : 7,
 		r : 5,
 		&#39;fill-opacity&#39; : .5
 	},
+<span id='Chart-Legend-Item-property-rect'>  /**
+</span>   * 图形是矩形的配置项
+   * @protected
+   * @type {Object}
+   */
 	rect : {
 		x : 2,
 		y : 2,
@@ -115,51 +155,15 @@ Util.augment(LegendItem,{
   	var _self = this;
   		
   	LegendItem.superclass.bindUI.call(_self);
-  	_self.bindMouseEvent();
-  	_self.bindClick();
   },
-  //鼠标事件
-  bindMouseEvent : function(){
-  	var _self = this,
-  		item = _self.get(&#39;item&#39;);
-
-  	_self.on(&#39;mouseover&#39;,function(ev){
-  		item.setActived &amp;&amp; item.setActived();
-  	}).on(&#39;mouseout&#39;,function(ev){
-  		item.clearActived &amp;&amp; item.clearActived();
-  	});
-  },
-  //点击事件
-  bindClick : function(){
-  	var _self = this,
-  		item = _self.get(&#39;item&#39;);
-
-  	_self.on(&#39;click&#39;,function(){
-  		var visible = item.get(&#39;visible&#39;);
-  		if(visible){ //防止最后一个隐藏
-  			var itemParent = item.get(&#39;parent&#39;),
-  				children = itemParent.getVisibleChildren ? itemParent.getVisibleChildren() : itemParent.get(&#39;children&#39;),
-  				count = children.length;
-  			if(count == 1){
-  				return;
-  			}
-  		}
-  		_self._setVisible(!visible);
-  	});
-  },
+  
   //设置是否可见
-	_setVisible : function(visible){
+	_setChecked : function(checked){
 		var _self = this,
-			item = _self.get(&#39;item&#39;),
 			shape = _self.get(&#39;shape&#39;),
 			marker = _self.get(&#39;marker&#39;),
-			color = visible ? _self.get(&#39;color&#39;) : _self.get(&#39;hideColor&#39;),
-			itemParent = item.get(&#39;parent&#39;);
-		if(visible){
-			itemParent.showChild &amp;&amp; itemParent.showChild(item);
-		}else{
-			itemParent.hideChild &amp;&amp; itemParent.hideChild(item);
-		}
+			color = checked ? _self.get(&#39;color&#39;) : _self.get(&#39;uncheckedColor&#39;);
+
 		shape &amp;&amp; shape.attr({
 			stroke : color,
 			fill : color
@@ -169,7 +173,14 @@ Util.augment(LegendItem,{
 			fill : color
 		});
 	},
-<span id='Chart-LegendItem-method-getWidth'>	/**
+  //checked发生改变时
+  _onRenderChecked : function(checked){
+    var _self = this;
+    if(_self.get(&#39;rendered&#39;)){
+      _self._setChecked(checked);
+    }
+  },
+<span id='Chart-Legend-Item-method-getWidth'>	/**
 </span>	 * 获取legend item的宽度
 	 * @return {Number} 宽度
 	 */

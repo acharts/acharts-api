@@ -27,12 +27,7 @@ var
 	CLS_TITLE = &#39;ac-title&#39;,
 	CLS_LIST = &#39;ac-list&#39;;
 
-function min(x,y){
-	return x &gt; y ? y : x;
-}
-function max(x,y){
-	return x &gt; y ? x : y;
-}
+var max = Math.max;
 
 function getElementsByClassName(dom,cls){
 	var els = dom.getElementsByTagName(&#39;*&#39;);
@@ -65,7 +60,11 @@ function find(dom,cls){
 <span id='Chart-Tooltip'>/**
 </span> * @class Chart.Tooltip
  * 提示信息
- * @extends Chart.PlotItem
+ * 
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-tooltip/&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-tooltip/wiki/&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
+ * 
+ * @extends Chart.Plot.Item
  */
 var Tooltip = function(cfg){
 	Tooltip.superclass.constructor.call(this,cfg);
@@ -111,9 +110,9 @@ Tooltip.ATTRS = {
 	 * @type {Object}
 	 */
 	name : {
-			&#39;font-size&#39; : &#39;12&#39;,
-			&#39;text-anchor&#39; : &#39;start&#39;
-		},
+		&#39;font-size&#39; : &#39;12&#39;,
+		&#39;text-anchor&#39; : &#39;start&#39;
+	},
 <span id='Chart-Tooltip-property-value'>	/**
 </span>	 * 当前值的文本配置信息
 	 * @type {String}
@@ -122,7 +121,11 @@ Tooltip.ATTRS = {
 			&#39;font-size&#39; : &#39;12&#39;,
 			&#39;font-weight&#39; :&#39;bold&#39;,
 			&#39;text-anchor&#39; : &#39;start&#39;
-		},
+	},
+<span id='Chart-Tooltip-property-border'>	/**
+</span>	 * 边框的配置项
+	 * @type {Object}
+	 */
 	border : {
 			x : 0,
 			y : 0,
@@ -138,6 +141,7 @@ Tooltip.ATTRS = {
 	duration : 100,
 <span id='Chart-Tooltip-property-pointRenderer'>	/**
 </span>	 * 用于格式化数据序列时使用
+	 * @deprecated 迁移到series中
 	 * @type {Function}
 	 */
 	pointRenderer : null,
@@ -146,6 +150,12 @@ Tooltip.ATTRS = {
 	 * @type {String}
 	 */
 	valueSuffix : &#39;&#39;,
+
+<span id='Chart-Tooltip-property-valueSplit'>	/**
+</span>	 * 存在多个值时的分隔符
+	 * @type {String}
+	 */
+	valueSplit : &#39; &#39;,
 	
 	visible : false,
 
@@ -161,14 +171,29 @@ Tooltip.ATTRS = {
 	 */
 	customFollow : true,
 
+<span id='Chart-Tooltip-property-html'>	/**
+</span>	 * 使用html时的外层模板
+	 * @type {String}
+	 */
 	html : &#39;&lt;div class=&quot;ac-tooltip&quot; style=&quot;position:absolute;visibility: hidden;&quot;&gt;&lt;h4 class=&quot;&#39; + CLS_TITLE + &#39;&quot;&gt;&lt;/h4&gt;&lt;ul class=&quot;&#39; + CLS_LIST + &#39;&quot;&gt;&lt;/ul&gt;&lt;/div&gt;&#39;,
+		
+<span id='Chart-Tooltip-property-itemTpl'>	/**
+</span>	 * 使用html时，单个选项的模板
+	 * @type {String}
+	 */
+	itemTpl : &#39;&lt;li&gt;&lt;span style=&quot;color:{color}&quot;&gt;{name}&lt;/span&gt; : {value}&lt;/li&gt;&#39;,
 	
-	formatter : function(item,index){
-		return Util.substitute(&#39;&lt;li&gt;&lt;span style=&quot;color:{color}&quot;&gt;{name}&lt;/span&gt; : {value}&lt;/li&gt;&#39;,item);
-	},
+<span id='Chart-Tooltip-property-items'>	/**
+</span>	 * 显示的选项，每个选项分为 name 和 value
+	 * @type {Array}
+	 */
 	items : [
 
 	],
+<span id='Chart-Tooltip-property-crossLine'>	/**
+</span>	 * @crosshairs 线的颜色
+	 * @type {Object}
+	 */
 	crossLine: {
 		stroke : &quot;#C0C0C0&quot;
 	}
@@ -206,7 +231,7 @@ Util.augment(Tooltip,{
 		var _self = this,
 			title = _self.get(&#39;title&#39;);
 
-		_self.setTitle(title.text);
+		title &amp;&amp; _self.setTitle(title.text);
 
 	},
 	_renderCustom : function(){
@@ -225,15 +250,27 @@ Util.augment(Tooltip,{
 			outterNode.style.position = &#39;relative&#39;;
 		}
 		_self.set(&#39;customDiv&#39;,customDiv);
+
+		var items = _self.get(&#39;items&#39;);
+		Util.each(items,function(item,index){
+			_self.addCustomItem(item,index);
+		});
 	},
 	//渲染文本集合
 	_renderItemGroup : function(){
 		var _self = this,
 			items = _self.get(&#39;items&#39;),
-			group = _self.addGroup({
+			titleShape = _self.get(&#39;titleShape&#39;),
+			cfg = {
 				x : 8,
-				y : 30
-			});
+				y : 10
+			},
+			group;
+
+		if(titleShape){
+			cfg.y += 20;
+		}
+		group = _self.addGroup(cfg);
 		_self.set(&#39;textGroup&#39;,group);
 		if(items){
 			_self.setItems(items);
@@ -244,10 +281,19 @@ Util.augment(Tooltip,{
 		var _self = this,
 			crosshairs = _self.get(&#39;crosshairs&#39;),
 			shape,
+			canvas = _self.get(&#39;canvas&#39;),
 			plotRange = _self.get(&#39;plotRange&#39;);
 
 		if(crosshairs){
-
+			var y1,
+				y2;
+			if(plotRange){
+				y1 = plotRange.bl.y;
+				y2 = plotRange.tl.y;
+			}else{
+				y1 = canvas.get(&#39;height&#39;);
+				y2 = 0;
+			}
 			shape = _self.get(&#39;parent&#39;).addShape({
 				type : &#39;line&#39;,
 				visible : false,
@@ -255,9 +301,9 @@ Util.augment(Tooltip,{
 				attrs : {
 					stroke : _self.get(&#39;crossLine&#39;).stroke,
 					x1 : 0,
-					y1 : plotRange.bl.y,
+					y1 : y1,
 					x2 : 0,
-					y2 : plotRange.tl.y
+					y2 : y2
 				}
 			});
 
@@ -274,7 +320,9 @@ Util.augment(Tooltip,{
 			title = _self.get(&#39;title&#39;),
 			custom = _self.get(&#39;custom&#39;),
 			cfg;
-
+		if(!title){
+			return;
+		}
 		_self.set(&#39;titleText&#39;,text);
 		if(custom){
 			var customDiv = _self.get(&#39;customDiv&#39;),
@@ -288,6 +336,7 @@ Util.augment(Tooltip,{
 		titleShape = _self.get(&#39;titleShape&#39;);
 		if(!titleShape){
 			title.text = text || &#39;&#39;;
+			title[&#39;text-anchor&#39;] = &quot;start&quot;;
 			titleShape = _self.addShape(&#39;text&#39;,title);
 			_self.set(&#39;titleShape&#39;,titleShape);
 		}
@@ -307,8 +356,10 @@ Util.augment(Tooltip,{
 			width = Math.max(width,tbox.width);
 		}
 		rst.width = bbx.x + width + 8;
-		rst.height = bbx.height + bbx.y + 10;
-		
+		rst.height = bbx.height + bbx.y + 8;
+		/*if(tbox){
+			rst.height += tbox.height;
+		}*/
 		return rst;
 	},
 <span id='Chart-Tooltip-method-setColor'>	/**
@@ -389,7 +440,8 @@ Util.augment(Tooltip,{
 		x = x - bbox.width - offset;
 		y = y - bbox.height;
 		if(customDiv &amp;&amp; _self.get(&#39;customFollow&#39;)){
-			x = x - Util.getOuterWidth(customDiv);
+			var paddingLeft = parseFloat(Util.getStyle(customDiv,&#39;paddingLeft&#39;)) || 0;
+			x = x - Util.getOuterWidth(customDiv) + paddingLeft;
 		}
 		if(plotRange){
 
@@ -452,11 +504,12 @@ Util.augment(Tooltip,{
 	},
 	//添加自定义项
 	addCustomItem : function(item,index){
+		item.index = index;
 		var _self = this,
 			customDiv = _self.get(&#39;customDiv&#39;),
 			listDom = find(customDiv,CLS_LIST),
-			formatter = _self.get(&#39;formatter&#39;),
-			str = formatter(item,index),
+			itemTpl = _self.get(&#39;itemTpl&#39;),
+			str = Util.substitute(itemTpl,item),
 			node = Util.createDom(str);
 		listDom.appendChild(node);
 	},
@@ -471,18 +524,21 @@ Util.augment(Tooltip,{
 			name = _self.get(&#39;name&#39;),
 			value = _self.get(&#39;value&#39;),
 			y = index * 16,
-			cfg;
-
-		cfg = Util.mix({},name,{
-			x : 0,
-			y : y,
-			text : item.name + &#39;:&#39;,
-			&#39;fill&#39; : item.color
-		});
-
-	  var nameShape =	group.addShape(&#39;text&#39;,cfg),
-	  	width = nameShape.getBBox().width + 10,
-	  	valueSuffix = _self.get(&#39;valueSuffix&#39;),
+			cfg,
+			nameShape,
+			width = 0;
+		if(name){
+			cfg = Util.mix({},name,{
+				x : 0,
+				y : y,
+				text : item.name + &#39;:&#39;,
+				&#39;fill&#39; : item.color
+			});
+			nameShape =	group.addShape(&#39;text&#39;,cfg);
+			width = nameShape.getBBox().width + 10;
+		}
+		
+	  var valueSuffix = item.suffix ||  _self.get(&#39;valueSuffix&#39;),
 	  	itemValue;
 	  if(Util.isArray(item.value)){
 	  	Util.each(item.value,function(sub){
@@ -495,7 +551,7 @@ Util.augment(Tooltip,{
 	  		width = width + subItem.getBBox().width;
 	  	});
 	  }else{
-	  	itemValue = valueSuffix ? item.value + &#39; &#39; + valueSuffix : item.value;
+	  	itemValue = valueSuffix ? item.value + _self.get(&#39;valueSplit&#39;) + valueSuffix : item.value;
 	  	addValue(itemValue);
 	  }
 
@@ -540,7 +596,6 @@ Util.augment(Tooltip,{
 				_self.onChange();
 			}
 	},
-
 	onChange : function(){
 		this.fireUp(&#39;tooltipchange&#39;,this.getEventObj());
 	},
@@ -574,7 +629,7 @@ Util.augment(Tooltip,{
 			crossShape = _self.get(&#39;crossShape&#39;),
 			customDiv = _self.get(&#39;customDiv&#39;);
 		crossShape &amp;&amp; crossShape.remove();
-		Tooltip.superclass.remove(this);
+		Tooltip.superclass.remove.call(this);
 		if(customDiv){
 			customDiv.parentNode.removeChild(customDiv);
 		}

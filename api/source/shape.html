@@ -46,7 +46,7 @@ Util.augment(Shape,{
   isShape : true,
   
   //渲染shape
-  renderUI : function(){
+  createDom : function(){
 
     var _self = this,
       el = _self.get(&#39;el&#39;),
@@ -449,7 +449,7 @@ PolyLine.ATTRS = {
    *  
    * @type {Array|String}
    */
-  points : {}
+  points : []
 };
 
 Util.extend(PolyLine,Path);
@@ -494,7 +494,7 @@ Polygon.ATTRS = {
    *  
    * @type {Array|String}
    */
-  points : {}
+  points : []
 };
 
 Util.extend(Polygon,Path);
@@ -770,7 +770,7 @@ Util.augment(Marker,{
     var _self = this,
       symbol = attrs.symbol,
       radius = attrs.radius || 5;
-    if(symbol &amp;&amp; symbol.indexOf(&#39;url&#39;) != -1){ //图片
+    if(symbol &amp;&amp; !Util.isFunction(symbol) &amp;&amp; symbol.indexOf(&#39;url&#39;) != -1){ //图片
       attrs.type = &#39;image&#39;;
       attrs.src = symbol.replace(/url\((.*)\)/,&#39;$1&#39;);
       attrs.width = attrs.radius * 2;
@@ -793,7 +793,14 @@ Util.augment(Marker,{
     if(!attrs.symbol &amp;&amp; attrs.path){
       return  Util.substitute(attrs.path,attrs);
     }
-    var method = Marker.Symbols[attrs.symbol];
+    var method;
+
+    if(Util.isFunction(attrs.symbol)){
+      method = attrs.symbol;
+    }else{
+      method = Marker.Symbols[attrs.symbol];
+    }
+    
     if(method){
       return method(attrs.x,attrs.y,attrs.radius)
     }else{
