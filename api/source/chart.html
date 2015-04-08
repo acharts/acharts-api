@@ -159,17 +159,17 @@ Chart.ATTRS = {
     title : undefined,
 <span id='Chart-property-tooltip'>    /**
 </span>     * 提示信息
-     * @type {Object}
+     * @type {Chart.Tooltip}
      */
     tooltip : undefined,
 <span id='Chart-property-xAxis'>    /**
-</span>     * x 轴坐标
+</span>     * x 轴坐标 可以加入多个坐标轴 单个坐标轴配置项可见Chart.Axis
      * @type {Object|Array}
      */
     xAxis : undefined,
 
 <span id='Chart-property-yAxis'>    /**
-</span>     * Y 轴坐标
+</span>     * Y 轴坐标 可以加入多个坐标轴 单个坐标轴配置项可见Chart.Axis
      * @type {Object|Array}
      */
     yAxis : undefined,
@@ -586,7 +586,7 @@ Util.augment(Chart,{
 <span id='Chart-method-getXAxis'>  /**
 </span>   * 获取x坐标轴
    * @param  {String} [seriesName] 数据序列的名称，如果为空，则返回第一个数据序列的x坐标轴
-   * @return {Chart.Series}  坐标轴
+   * @return {Chart.Axis}  坐标轴
    */
   getXAxis : function (name) {
     var _self = this,
@@ -601,7 +601,7 @@ Util.augment(Chart,{
 <span id='Chart-method-getYAxis'>  /**
 </span>   * 获取y坐标轴
    * @param  {String} [seriesName] 数据序列的名称，如果为空，则返回第一个数据序列的y坐标轴
-   * @return {Chart.Series}  坐标轴
+   * @return {Chart.Axis}  坐标轴
    */
   getYAxis : function (name) {
     var _self = this,
