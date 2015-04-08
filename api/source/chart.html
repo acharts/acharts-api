@@ -43,18 +43,19 @@ Chart.ATTRS = {
 <span id='Chart-property-canvas'>    /**
 </span>     * 画板
      * &lt;code&gt;
+     *  //可通过下面方法获取canvas
      *  var canvas =  chart.get(&#39;canvas&#39;);
      * &lt;/code&gt;
      * @type {Chart.Canvas}
      */
     canvas : undefined,
 <span id='Chart-property-colors'>    /**
-</span>     * 数据图例默认的颜色顺序
+</span>     * 数据图例默认的颜色顺序,如[&#39;red&#39;,&#39;green&#39;]
      * @type {Array}
      */
     colors : undefined,
 <span id='Chart-property-data'>    /**
-</span>     * 显示的数据
+</span>     * 显示的数据,可以在series里面指定
      * @type {Array}
      */
     data : undefined,
@@ -65,7 +66,7 @@ Chart.ATTRS = {
      */
     yTickCounts : undefined,
 <span id='Chart-property-xTickCounts'>    /**
-</span>     * x轴的坐标轴个数限制
+</span>     * x轴的坐标轴个数限制，仅在坐标轴类型是time的时候生效 如[1,5]表示生成1~5个坐标点
      * @type {Array}
      */
     xTickCounts : undefined,
@@ -84,7 +85,7 @@ Chart.ATTRS = {
 
 <span id='Chart-property-legend'>    /**
 </span>     * 标示每个图例颜色的配置项
-     * @type {Object}
+     * @type {Chart.Legend}
      */
     legend : undefined,
    
@@ -101,7 +102,7 @@ Chart.ATTRS = {
     plotRange : undefined,
 <span id='Chart-property-series'>    /**
 </span>     * 数据图序列集合
-     * @type {Array}
+     * @type {Chart.Series}
      */
     series : undefined,
 <span id='Chart-property-invert'>    /**
@@ -110,7 +111,39 @@ Chart.ATTRS = {
      */
     invert : false,
 <span id='Chart-property-seriesOptions'>    /**
-</span>     * 数据图序列默认的配置项
+</span>     * 数据图序列默认的配置项集合
+     *  - 默认的配置规则为类型+Cfg：比如需要对线图进行集中配置时：
+     * &lt;pre&gt;&lt;code&gt;
+     * seriesOptions: {
+     *    lineCfg:{
+     *       //设置为曲线
+     *       smooth : true,
+     *       //把线的宽度设为2
+     *       line:{
+     *          &#39;stroke-width&#39;: 2
+     *       }
+     *    }
+     * }
+     * &lt;/code&gt;&lt;/pre&gt;
+     *  - 也可以多个进行配置，把折线图和区域图写在一起
+     * &lt;pre&gt;&lt;code&gt;
+     * seriesOptions: {
+     *    lineCfg:{
+     *       //设置为曲线
+     *       smooth : true,
+     *       //把线的宽度设为2
+     *       line:{
+     *          &#39;stroke-width&#39;: 2
+     *       }
+     *    },
+     *    areaCfg:{
+     *       //设置为曲线
+     *       smooth : true,
+     *       //去掉marker
+     *       markers: null
+     *    }
+     * }
+     * &lt;/code&gt;&lt;/pre&gt;
      * @type {Object}
      */
     seriesOptions : undefined,
