@@ -57,6 +57,17 @@ Series.ATTRS = {
 <span id='Chart-Series-property-labels'>  /**
 </span>   * 显示对应点的文本的配置项
    * @type {Chart.Labels}
+   * &lt;pre&gt;&lt;code&gt;
+   * {
+   *   label : {
+   *     font : &#39;20px/1.5 &quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif&#39;,
+   *     stroke : &#39;#333&#39;,
+   *     x : 10,
+   *     y : 10,
+   *     rotate : 90
+   *   }
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   labels : null,
 <span id='Chart-Series-property-animate'>  /**
@@ -114,7 +125,7 @@ Series.ATTRS = {
    */
   itemName : &#39;seriesItem&#39;,
 <span id='Chart-Series-property-legendType'>  /**
-</span>   * 显示legend的类型，默认是矩形
+</span>   * 显示legend的类型，默认是rect
    * @type {String}
    */
   legendType : &#39;rect&#39;,
@@ -123,7 +134,13 @@ Series.ATTRS = {
    * @protected
    * @type {String}
    */
-  groupName : &#39;series&#39;
+  groupName : &#39;series&#39;,
+
+<span id='Chart-Series-property-effectChart'>  /**
+</span>   * 数据改变时，是否重绘整个图表，一般发生在影响坐标轴时
+   * @type {Boolean}
+   */
+  effectChart : false,
 
 <span id='Chart-Series-event-beforepaint'>  /**
 </span>   * @event beforepaint
@@ -190,7 +207,7 @@ Util.augment(Series,{
       _self.set(&#39;data&#39;,data);
     }
     if(redraw){
-      if(parent &amp;&amp; parent.repaint){
+      if(_self.get(&#39;effectChart&#39;) &amp;&amp; parent &amp;&amp; parent.repaint){
         parent.repaint();
       }else if(_self.get(&#39;visible&#39;)){
         _self.repaint();
@@ -394,7 +411,16 @@ Util.augment(Series,{
     var _self = this,
       points = _self.get(&#39;points&#39;),
       rst,
-      last;
+      first = points[0],
+      next,
+      last = points[points.length - 1];
+
+    if(!first){
+      return null;
+    }
+    if(Util.isNumber(value) &amp;&amp; (value &gt; last.xValue || value &lt; first.xValue)){
+      return null;
+    }
 
     Util.each(points,function(point,index){
 
@@ -406,6 +432,7 @@ Util.augment(Series,{
         next = points[index + 1];
       }
     });
+    
     if(last &amp;&amp; next){ //计算最逼近的
       if(Math.abs(last.xValue - value) &gt; Math.abs(next.xValue - value)){
         last = next;
@@ -440,9 +467,9 @@ Util.augment(Series,{
     _self.set(&#39;painting&#39;,true);//正在绘制，防止再绘制过程中触发重绘
     _self.fire(&#39;beforepaint&#39;);
     _self.draw(points,function(){
-      _self.sort();
       _self.fire(&#39;afterpaint&#39;);
     });
+    _self.sort();
     _self.set(&#39;isPaint&#39;,true);
     _self.set(&#39;painting&#39;,false);
   },
@@ -461,6 +488,7 @@ Util.augment(Series,{
       return;
     }
 
+    _self.set(&#39;repainting&#39;,true);//正在绘制，防止再绘制过程中触发重绘
     
     points = _self.getPoints();
 
@@ -488,6 +516,7 @@ Util.augment(Series,{
 
     _self._changeMarkers();
     _self._changeLabels();
+    _self.set(&#39;repainting&#39;,false);
   },
 <span id='Chart-Series-method-changeShapes'>  /**
 </span>   * @protected

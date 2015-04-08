@@ -39,7 +39,8 @@ function removeLabel(label){
  * 
  *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/api/itemgroup.html&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
  *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/08-itemgroup.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
- *  
+ * @extends Chart.Series
+ * @private
  */
 var Group = function(){
 
@@ -185,11 +186,12 @@ Util.augment(Group,{
     var count = points.length,
       length = items.length;
 
+    var last = items[items.length - 1];
     //大于现有的点
     for (var i = length; i &lt; count; i++) {
       var shape = _self.addItem(points[i],i);
       if(length &gt; 1 ){
-        animate &amp;&amp; _self.animateItem(shape,items[items.length - 1].get(&#39;prePoint&#39;));
+        animate &amp;&amp; _self.animateItem(shape,last.get(&#39;prePoint&#39;));
       }
       
     }

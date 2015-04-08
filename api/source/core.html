@@ -200,6 +200,8 @@ require(&#39;./eve&#39;);
             &quot;arrow-start&quot;: &quot;none&quot;,
             blur: 0,
             &quot;clip-rect&quot;: &quot;0 0 1e9 1e9&quot;,
+            &quot;clip-angle&quot;: &quot;0 0 1e9 1e9&quot;,
+            &quot;clip-circle&quot;: &quot;0 0 1e9&quot;,
             cursor: &quot;default&quot;,
             cx: 0,
             cy: 0,
@@ -238,6 +240,8 @@ require(&#39;./eve&#39;);
         availableAnimAttrs = R._availableAnimAttrs = {
             blur: nu,
             &quot;clip-rect&quot;: &quot;csv&quot;,
+            &quot;clip-angle&quot;: &quot;csv&quot;,
+            &quot;clip-circle&quot;: &quot;csv&quot;,
             cx: nu,
             cy: nu,
             fill: &quot;colour&quot;,
@@ -4181,6 +4185,19 @@ require(&#39;./eve&#39;);
                                     while (i--) {
                                         now[i] = +from[attr][i] + pos * ms * diff[attr][i];
                                     }
+                                }else if(attr == &quot;clip-circle&quot;){
+                                    now = [];
+                                    i = 3;
+                                    while (i--) {
+                                        now[i] = +from[attr][i] + pos * ms * diff[attr][i];
+                                    }
+                                }
+                                else if(attr == &quot;clip-angle&quot;){
+                                    now = [];
+                                    i = 4;
+                                    while (i--) {
+                                        now[i] = +from[attr][i] + pos * ms * diff[attr][i];
+                                    }
                                 }
                                 break;
                             default:
@@ -4513,7 +4530,7 @@ require(&#39;./eve&#39;);
                         case &quot;csv&quot;:
                             var values = Str(params[attr])[split](separator),
                                 from2 = Str(from[attr])[split](separator);
-                            if (attr == &quot;clip-rect&quot;) {
+                            if (attr == &quot;clip-rect&quot;  || attr == &quot;clip-circle&quot; || attr == &quot;clip-angle&quot; ) {
                                 from[attr] = from2;
                                 diff[attr] = [];
                                 i = from2.length;
@@ -5399,7 +5416,6 @@ require(&#39;./eve&#39;);
     return R;
 }));
 
-module.exports = Raphael;
-</pre>
+module.exports = Raphael;</pre>
 </body>
 </html>

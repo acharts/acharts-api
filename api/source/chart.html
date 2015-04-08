@@ -179,7 +179,7 @@ Chart.ATTRS = {
 </span>     * 应用的样式
      * @type {Object}
      */
-    theme : Theme.Base
+    theme : Theme.SmoothBase
     
 <span id='Chart-event-seriesactived'>    /**
 </span>     * @event seriesactived
@@ -540,6 +540,45 @@ Util.augment(Chart,{
    */
   getSeries : function(){
     return this.get(&#39;seriesGroup&#39;).getSeries();
+  },
+<span id='Chart-method-getSerieByName'>  /**
+</span>   * 根据name获取序列
+   * @return {Chart.Series} 对应的数据序列
+   */
+  getSerieByName : function(name){
+    return this.get(&#39;seriesGroup&#39;).findBy(function(item){
+      return item.get(&#39;name&#39;) == name;
+    });
+  },
+<span id='Chart-method-getXAxis'>  /**
+</span>   * 获取x坐标轴
+   * @param  {String} [seriesName] 数据序列的名称，如果为空，则返回第一个数据序列的x坐标轴
+   * @return {Chart.Series}  坐标轴
+   */
+  getXAxis : function (name) {
+    var _self = this,
+      series;
+    if(name){
+      series = _self.getSerieByName(name);
+    }else{
+      series = _self.getSeries()[0];
+    }
+    return series.get(&#39;xAxis&#39;);
+  },
+<span id='Chart-method-getYAxis'>  /**
+</span>   * 获取y坐标轴
+   * @param  {String} [seriesName] 数据序列的名称，如果为空，则返回第一个数据序列的y坐标轴
+   * @return {Chart.Series}  坐标轴
+   */
+  getYAxis : function (name) {
+    var _self = this,
+      series;
+    if(name){
+      series = _self.getSerieByName(name);
+    }else{
+      series = _self.getSeries()[0];
+    }
+    return series.get(&#39;yAxis&#39;);
   },
 <span id='Chart-method-changeData'>   /**
 </span>   * 改变数据

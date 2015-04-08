@@ -25,7 +25,7 @@ var Util = require(&#39;achart-util&#39;);
 
 <span id='Chart-Series-Stacked'>/**
 </span> * @class Chart.Series.Stacked
- * @protected
+ * @private
  * 此类是一个扩展，不应该直接实例化,主要用于区域图，柱状图层叠的场景
  *
  *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/latest/api/stacked.html&quot; target=&quot;_blank&quot;&gt;文档&lt;/a&gt;
@@ -100,11 +100,11 @@ Util.augment(Stacked,{
 </span>   * @protected
    * 转换显示的值，一般用于层叠的数据序列中
    */
-  parseYValue : function(value){
+  parseYValue : function(value,index){
     var _self = this,
       stackType = _self.get(&#39;stackType&#39;),
       data = _self.get(&#39;data&#39;),
-      index = Util.indexOf(data,value),
+      index = index == null ? Util.indexOf(data,value) : index,
       percentValue;
     if(stackType == &#39;percent&#39;){
       percentValue = _self.getStackedPercent(value,index);

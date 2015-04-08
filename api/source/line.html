@@ -54,7 +54,7 @@ Line.ATTRS = {
   type : &#39;line&#39;,
   elCls : &#39;x-chart-line-series&#39;,
 <span id='Chart-Series-Line-property-connectNulls'>  /**
-</span>   * 是否忽略null的值，连接null2边的值
+</span>   * 是否忽略null的值，连接null两边的值
    * @type {Boolean}
    */
   connectNulls : false,  
@@ -79,7 +79,10 @@ Line.ATTRS = {
    * @type {Boolean}
    */
   smooth : false,
-  
+<span id='Chart-Series-Line-property-legendType'>  /**
+</span>   * legend的类型
+   * @type {String}
+   */
   legendType : &#39;line&#39;
 };
 
@@ -163,12 +166,26 @@ Util.augment(Line,{
       lineShape,
       path = &#39;&#39;;
 
-    if(!animate){
+    if(!animate || !Util.svg){
       drawLine();
       after();
     }else{
-      lineShape = _self._createLine(path);
+      
       if(_self.isInCircle()){
+        var circle = _self.getCircle(),
+        center = circle.getCenter(),
+        baseValue = _self.getBaseValue();
+        //防止遮盖
+        var initPoints = [];
+        Util.each(points,function(point){
+          var item = Util.mix({
+            value : baseValue
+          },center);
+          initPoints.push(item);
+        });
+        _self.drawInner(initPoints);
+
+        lineShape = _self._createLine(path);
         _self.circleAnimate(points,lineShape);
         after();
       }else{
@@ -177,22 +194,21 @@ Util.augment(Line,{
       
     }
 
+    _self.drawTracker(points);
     function drawLine(){
       path = _self.points2path(points);
+      _self.drawInner(points);
       lineShape = _self._createLine(path);
       Util.each(points,function(point){
         _self._drawPoint(point);
       });
-
-      _self.drawInner(points);
-      
     }
 <span id='Chart-Series-Line-method-after'>    /**
 </span>     * @private
      */
     function after(){
       
-      _self.drawTracker(points);
+     
       callback &amp;&amp; callback();
     }
     
@@ -216,7 +232,6 @@ Util.augment(Line,{
     });
     path = _self.points2path(initPoints);
     lineShape.attr(&#39;path&#39;,path);
-    _self.drawInner(initPoints);
 
     _self.repaint();
 

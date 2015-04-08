@@ -46,6 +46,12 @@ Flag.ATTRS = {
      */
     flags : null,
 
+<span id='Chart-Series-Flag-property-onSeries'>    /**
+</span>     * 标记的series的Id
+     * @type {String}
+     */
+    onSeries: null,
+
     zIndex: 6
 };
 
@@ -134,21 +140,16 @@ Util.augment(Flag,{
         Util.each(points, function (item, index) {
             var cfg = _self.__getShapeCfg(item, index)
             newItems.push(cfg);
-
-            //if(flagGroup.get(&#39;flagGroups&#39;) &amp;&amp; flagGroup.get(&#39;flagGroups&#39;)[index]){
-                //flagGroup.get(&#39;flagGroups&#39;)[index].changeStackCfg(cfg);
-                flagGroup.changeStackCfg(index,cfg);
-            //}
-
+            flagGroup.changeStackCfg(index,cfg);
         });
 
         flagGroup.change(newItems,animate);
     },
-<span id='Chart-Series-Flag-method-getTipItem'>    /**
+<span id='Chart-Series-Flag-method-getTipInfo'>    /**
 </span>     * 获取提示信息
      * @return {*} 返回显示在上面的文本
      */
-    getTipItem : function(point){
+    getTipInfo : function(point){
         return point.obj.tooltip ? point.obj.tooltip : point.value;
     },
     //根据points画出标记

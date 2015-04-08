@@ -7,7 +7,7 @@ module.exports = function(grunt) {
                 // source paths with your code
                 src: [
                     "../acharts/src",
-                    "../achart-*/src"
+                    "../acharts/spm_modules/achart-*/*/src"
                     // globbing supported!
                 ],
 
@@ -16,7 +16,7 @@ module.exports = function(grunt) {
 
                 // extra options
                 options: {
-                    'builtin-classes': true,
+                    'builtin-classes': false,
                     //'tags':['fileOverview'],
                     'warnings': [ '-dup_member', '-link_ambiguous','-tag'],
                     'external': ['window','HTMLDocument','HTMLElement','DocumentFragment','XMLHttpRequest','jQuery'],

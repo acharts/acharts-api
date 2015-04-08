@@ -70,6 +70,8 @@ function getPiePath (startAngle, endAngle,r,ir,circle) {
  *  
  * @extends Chart.Series.Cartesian
  * @mixins Chart.Series.ItemGroup
+ * @mixins Chart.Series.Stacked
+ * @mixins Chart.Actived.Group
  */
 var Column = function(cfg){
   Column.superclass.constructor.call(this,cfg);
@@ -86,6 +88,12 @@ Column.ATTRS = {
    * @type {Number}
    */
   columnWidth : null,
+
+<span id='Chart-Series-Column-property-autoWidth'>  /**
+</span>   * 是否自动计算宽度，此属性设置成true后，columnWidth 不再生效
+   * @type {Boolean}
+   */
+  autoWidth : true,
 <span id='Chart-Series-Column-property-columnOffset'>  /**
 </span>   * 自动计算得出
    * @type {Object}
@@ -101,9 +109,21 @@ Column.ATTRS = {
    * @type {Object}
    */
   stackPadding : 1,
+<span id='Chart-Series-Column-property-animate'>  /**
+</span>   * 创建序列时是否触发动画
+   * @type {Boolean}
+   */
   animate : true,
+<span id='Chart-Series-Column-property-duration'>  /**
+</span>   * 生成时动画的时间间隔
+   * @type {Number}
+   */
   duration : 1000,
-  
+<span id='Chart-Series-Column-property-columnActive'>  /**
+</span>   * 是否需要激活的高亮效果
+   * @type {Boolean}
+   */
+  columnActive: true,
   item : {
     &#39;stroke&#39;: &#39;none&#39;,
     &#39;stroke-width&#39;: 1,
@@ -179,6 +199,9 @@ Util.augment(Column,{
   },
   //重置宽度
   resetWidth : function(){
+    if(!this.get(&#39;autoWidth&#39;)){
+      return;
+    }
     if(this.isInCircle()){
       this.resetCircleWidth();
       return ;
@@ -288,13 +311,14 @@ Util.augment(Column,{
   setItemActived : function(item,actived){
     var _self = this,
       color = item.getCfgAttr(&#39;attrs&#39;).fill;
-
-    if(actived){
-      item.attr(&#39;fill&#39;,highlight(color,0.2));
-      item.set(&#39;actived&#39;,true);
-    }else{
-      item.attr(&#39;fill&#39;,color);
-      item.set(&#39;actived&#39;,false);
+    if(_self.get(&#39;columnActive&#39;)){
+      if(actived){
+        item.attr(&#39;fill&#39;,highlight(color,0.2));
+        item.set(&#39;actived&#39;,true);
+      }else{
+        item.attr(&#39;fill&#39;,color);
+        item.set(&#39;actived&#39;,false);
+      }
     }
   },
 <span id='Chart-Series-Column-method-setItemSelected'>  /**

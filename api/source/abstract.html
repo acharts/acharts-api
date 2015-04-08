@@ -36,6 +36,7 @@ var Item = require(&#39;achart-plot&#39;).Item,
  * 
  * @extends Chart.Plot.Item
  * @mixin Chart.ShowLabels
+ * @private
  */
 var Abstract = function(cfg){
   Abstract.superclass.constructor.call(this,cfg);
@@ -55,21 +56,58 @@ Abstract.ATTRS = {
 <span id='Chart-Axis-Abstract-property-line'>  /**
 </span>   * 坐标轴线的配置信息,如果设置成null，则不显示轴线
    * @type {Object}
+   * &lt;pre&gt;&lt;code&gt;
+   * {
+   *    stroke : &#39;#c0c0c0&#39;, //笔触
+   *    &#39;stroke-width&#39;: 3 //笔触宽度
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   line : null,
 <span id='Chart-Axis-Abstract-property-tickLine'>  /**
 </span>   * 标注坐标线的配置
    * @type {Object}
+   * &lt;pre&gt;&lt;code&gt;
+   * {
+   *    stroke : &#39;#c0c0c0&#39;, //笔触
+   *    &#39;stroke-width&#39;: 3 //笔触宽度
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   tickLine : null,
 <span id='Chart-Axis-Abstract-property-grid'>  /**
 </span>   * 栅格配置
    * @type {Object}
+   * &lt;pre&gt;&lt;code&gt;
+   * //栅格线配置项
+   * {
+   *   line : {  
+   *    stroke : &#39;#c0c0c0&#39;
+   *   },
+   *   //栅格线辅助线配置项
+   *   minorLine : { 
+   *    stroke : &#39;#e0e0e0&#39;
+   *   },
+   *   //栅格线辅助线配置项
+   *   minorCount : 2
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   grid : null,
 <span id='Chart-Axis-Abstract-property-labels'>  /**
 </span>   * 坐标轴上的文本
    * @type {Object}
+   * &lt;pre&gt;&lt;code&gt;
+   * {
+   *   label : {
+   *     font : &#39;20px/1.5 &quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif&#39;,
+   *     stroke : &#39;#333&#39;,
+   *     x : 10,
+   *     y : 10,
+   *     rotate : 90
+   *   }
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   labels : null,
 <span id='Chart-Axis-Abstract-property-autoPaint'>  /**
@@ -85,6 +123,12 @@ Abstract.ATTRS = {
 <span id='Chart-Axis-Abstract-property-formatter'>  /**
 </span>   * 格式化坐标轴上的节点
    * @type {Function}
+   * &lt;pre&gt;&lt;code&gt;
+   * //给坐标轴节点加上单位
+   * function(text){
+   *   return text + &#39;%&#39;;
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   formatter : null
 }

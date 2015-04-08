@@ -36,10 +36,22 @@ function max(x,y){
   return x &gt; y ? x : y;
 }
 
+function hasClass(dom,className){
+  if (!dom) {
+    return false;
+  }
+  var cls = &#39;&#39;;
+  if (dom.className.baseVal != null){
+    cls = dom.className.baseVal
+  }else{
+    cls = dom.className;
+  }
+  return cls.indexOf(className) !== -1;
+}
 <span id='Chart-SeriesGroup'>/**
 </span> * @class Chart.SeriesGroup
  * 数据序列的容器
- * @protected
+ * @private
  */
 function Group(cfg){
   Group.superclass.constructor.call(this,cfg);
@@ -217,6 +229,11 @@ Util.augment(Group,{
         _self.set(&#39;isOver&#39;,false);
       }
     });
+
+    canvas.on(&#39;mouseout&#39;,function(ev){
+      
+    });
+
   },
   //获取图标上对应位置的信息，待扩充
   getPointInfo : function(point,ev){
@@ -246,14 +263,21 @@ Util.augment(Group,{
   onTriggerOut : function(ev){
     var _self = this,
       tipGroup = _self.get(&#39;tipGroup&#39;);
+    var canvasNode = _self.get(&#39;canvas&#39;).get(&#39;node&#39;);
     _self.clearActivedItem();
     //标志从显示到隐藏
-    if(tipGroup.get(&#39;visible&#39;)){
+    if(tipGroup &amp;&amp; tipGroup.get(&#39;visible&#39;)){
       if(tipGroup.get(&#39;shared&#39;)){
         Util.each(_self.getVisibleSeries(),function(series){
           var markers = series.get(&#39;markersGroup&#39;);
           markers &amp;&amp; markers.clearActivedItem();
+          series.clearActivedItem &amp;&amp; series.clearActivedItem();
         });
+        //ev 不存在或者 ev.toElement不在canvas内部
+        if(!ev || !(Util.contains(canvasNode,ev.toElement) || (canvasNode === ev.toElement)) ){
+          _self._hideTip();
+        }
+        return;
       }
       _self._hideTip();
     }
@@ -261,11 +285,18 @@ Util.augment(Group,{
 
   onMouseOut : function(ev){
     var _self = this;
-    if(ev &amp;&amp; ev.target != _self.get(&#39;canvas&#39;).get(&#39;none&#39;)){
+    var canvasNode = _self.get(&#39;canvas&#39;).get(&#39;node&#39;);
+    
+    /*if (ev &amp;&amp; !Util.contains(canvasNode,ev.toElement)){
+       _self.onTriggerOut(ev);
+    } */
+    if (ev &amp;&amp; (Util.contains(canvasNode,ev.toElement) || (canvasNode === ev.toElement)) /*&amp;&amp; */) {
+      return;
+    }
+    if(ev &amp;&amp; hasClass(ev.toElement,&#39;ac-tooltip&#39;)){
       return;
     }
     _self.onTriggerOut(ev);
-
   },
 <span id='Chart-SeriesGroup-method-getSeries'>  /**
 </span>   * 获取所有的数据序列
@@ -281,14 +312,12 @@ Util.augment(Group,{
       //prePoint = _self.get(&#39;prePoint&#39;),
       tipInfo;
 
-
     if(!tipGroup.get(&#39;shared&#39;)){
       var activedItem = _self.getActived();
       activedItem &amp;&amp; sArray.push(activedItem);
     }else{
       sArray = _self.getSeries();
     }
-
     Util.each(sArray,function(series){
       if(series &amp;&amp; series.get(&#39;stickyTracking&#39;) &amp;&amp; series.get(&#39;visible&#39;)){
         series.onStickyTracking({point : point});
@@ -299,7 +328,6 @@ Util.augment(Group,{
       if(tipInfo.items.length){
         _self._showTooltip(tipInfo.title,tipInfo.point,tipInfo.items);
       }
-
     }
   },
   //获取显示tooltip的内容
@@ -318,33 +346,43 @@ Util.augment(Group,{
           xName = invert ? &#39;y&#39; : &#39;x&#39;,
           yName = invert ? &#39;x&#39; : &#39;y&#39;;
 
-      if(info){
+      if(info/* &amp;&amp; */){
         if(series.get(&#39;visible&#39;)){
-          var formatter = renderer;
-          if(series.get(&#39;pointRenderer&#39;)){
-            formatter = series.get(&#39;pointRenderer&#39;);
-          }
-          count = count + 1;
-          var tipInfo = series.getTipInfo(info);
-          if(Util.isObject(tipInfo)){
-            rst.items.push(tipInfo);
-          }else if(Util.isArray(tipInfo) &amp;&amp; Util.isObject(tipInfo[0])){
-            rst.items = rst.items.concat(tipInfo);
-          }else{
-            item.name = series.get(&#39;name&#39;);
-            item.value = formatter ? formatter(info,series) : tipInfo;
-            item.color = info.color || series.get(&#39;color&#39;);
-            item.suffix = series.get(&#39;suffix&#39;);
-            rst.items.push(item);
-          }
           var markersGroup = series.get(&#39;markersGroup&#39;);
-          if(markersGroup &amp;&amp; markersGroup.get(&#39;single&#39;)){
-            var marker = markersGroup.getChildAt(0);
-            marker &amp;&amp; marker.attr({
-              x :info.x,
-              y : info.y
-            });
+          if(info.value != null){
+            var formatter = renderer;
+            if(series.get(&#39;pointRenderer&#39;)){
+              formatter = series.get(&#39;pointRenderer&#39;);
+            }
+            count = count + 1;
+            var tipInfo = series.getTipInfo(info);
+            if(Util.isObject(tipInfo)){
+              rst.items.push(tipInfo);
+            }else if(Util.isArray(tipInfo) &amp;&amp; Util.isObject(tipInfo[0])){
+              rst.items = rst.items.concat(tipInfo);
+            }else{
+              item.name = series.get(&#39;name&#39;);
+              item.value = formatter ? formatter(info,series) : tipInfo;
+              item.color = info.color || series.get(&#39;color&#39;);
+              item.suffix = series.get(&#39;suffix&#39;);
+              rst.items.push(item);
+            }
+
+            if(markersGroup &amp;&amp; markersGroup.get(&#39;single&#39;)){
+                markersGroup.show();
+                var marker = markersGroup.getChildAt(0);
+                marker &amp;&amp; marker.attr({
+                  x :info.x,
+                  y : info.y
+                });
+            }
+
+          }else{
+            if(markersGroup &amp;&amp; markersGroup.get(&#39;single&#39;)){
+              markersGroup.hide();
+            }
           }
+                    
         }
         if(series.get(&#39;xAxis&#39;)){
           title = series.get(&#39;xAxis&#39;).formatPoint(info.xValue);
@@ -353,6 +391,7 @@ Util.augment(Group,{
         }
         if(count == 1){
           rst.title =  title;
+          rst.point.name = info.name;
           if(info[xName]){
             rst.point[xName] = info[xName];
             if(sArray.length == 1){
@@ -376,7 +415,7 @@ Util.augment(Group,{
     var _self = this,
       tooltip = _self.get(&#39;tipGroup&#39;),
       prePoint = _self.get(&#39;prePoint&#39;);
-    if(!prePoint || prePoint.x != point.x || prePoint.y != point.y){
+    if(!prePoint || (prePoint.x != point.x || prePoint.y != point.y) || point.name != prePoint.name){
       tooltip.setPosition(point.x,point.y);
       _self.set(&#39;prePoint&#39;,point);
       if(!tooltip.get(&#39;visible&#39;)){
@@ -416,14 +455,17 @@ Util.augment(Group,{
         series = _self.getSeries(),
         items = [];
       Util.each(series,function(item){
-        var markers = item.get(&#39;markers&#39;),
-          symbol = markers &amp;&amp; markers.marker.symbol;
+        var markers = item.get(&#39;markers&#39;);
+        var symbol = markers &amp;&amp; markers.marker.symbol;
+        var visible = item.get(&#39;visible&#39;);
+
         var item = {
           name : item.get(&#39;name&#39;),
           color : item.get(&#39;color&#39;),
           type : item.get(&#39;legendType&#39;),
           symbol : symbol,
-          item : item
+          item : item,
+          checked: visible
         };
         items.push(item);
       });
@@ -784,7 +826,7 @@ Util.augment(Group,{
         item.changeData(arr);
       }else{
         if(Util.isArray(data[0])){
-          item.changeData(data[i]);
+          item.changeData(data[index]);
         }else{
           item.changeData(data);
         }

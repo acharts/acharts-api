@@ -49,8 +49,21 @@ Bubble.ATTRS = {
   activeCircle : {},
 
   legendType : &#39;circle&#39;,
+
+<span id='Chart-Series-Bubble-property-radiusField'>  /**
+</span>   * 如果传入的数据是对象那么这个字段标示半径代表的字段
+   * @type {String}
+   */
+  radiusField : &#39;r&#39;,
   
   animate : true,
+
+<span id='Chart-Series-Bubble-method-radiusFormatter'>  /**
+</span>   * 格式化半径函数
+   */
+  radiusFormatter : function  (r) {
+    return Math.pow(r,.75);
+  },
 
   autoPaint : false,
 
@@ -101,12 +114,25 @@ Util.augment(Bubble,{
 
     Util.each(items,function(item,index){
       var point = points[index];
-      item.animate({
-        cx : point.x,
-        cy : point.y
-      },_self.get(&#39;changeDuration&#39;));
-      item.set(&#39;point&#39;,point);
+      if(point){
+        item.animate({
+          cx : point.x,
+          cy : point.y
+        },_self.get(&#39;changeDuration&#39;));
+        item.set(&#39;point&#39;,point);
+      }
     });
+    var count = items.length;
+    if(points.length &lt; count){
+      for(var i = count-1; i &gt;= points.length; i--){
+        items[i].remove();
+      }
+    }
+    if(points.length &gt; count){
+      for(var i = count; i &lt; points.length ; i ++){
+        _self.addBubble(points[i]);
+      }
+    }
 
   },
 <span id='Chart-Series-Bubble-method-getItems'>  /**
@@ -163,13 +189,17 @@ Util.augment(Bubble,{
       circle = _self.get(&#39;circle&#39;),
       r = 5, //默认5
       radius,
+      radiusField = _self.get(&#39;radiusField&#39;),
       cfg = Util.mix({},circle),
       shape;
     if(point.obj){
-      r = point.obj[&#39;r&#39;];
+      r = point.obj[radiusField];
     }
     if(point.arr){
       r = point.arr[2];
+      if(r == null){
+        r = point.arr[1];
+      }
     }
     radius = _self._getRadius(r);
     
@@ -186,10 +216,19 @@ Util.augment(Bubble,{
       shape = _self.get(&#39;group&#39;).addShape(&#39;circle&#39;,cfg);
     }
 
+    if(_self.get(&#39;labels&#39;)){
+      _self.addLabel(point.value,point);
+    }
+
     shape.set(&#39;point&#39;,point);
   },
   _getRadius : function(r){
-    return Math.pow(r,.75);
+    var _self = this,
+      radiusFormatter = _self.get(&#39;radiusFormatter&#39;);
+    if(radiusFormatter){
+      return radiusFormatter(r);
+    }
+    return r;
   },
    //鼠标hover
   bindMouseOver : function(){

@@ -23,7 +23,8 @@
 
 var Util = require(&#39;achart-util&#39;),
 	PlotItem = require(&#39;achart-plot&#39;).Item,
-	MARKER_WIDTH = 20;
+	MARKER_WIDTH = 20,
+  ALIGN_Y = 7;
 
 <span id='Chart-Legend-Item'>/**
 </span> * @class Chart.Legend.Item
@@ -49,7 +50,7 @@ LegendItem.ATTRS = {
 	label : {
 		x : MARKER_WIDTH,
 		&#39;text-anchor&#39;: &#39;start&#39;,
-		y : 7,
+		y : ALIGN_Y,
 		cursor : &#39;pointer&#39;,
 	},
 <span id='Chart-Legend-Item-property-checked'>  /**
@@ -196,7 +197,14 @@ Util.augment(LegendItem,{
 			cfg = Util.mix({},label,{
 				text : text
 			}),
-			labelShape = _self.addShape(&#39;label&#39;,cfg);
+			labelShape;
+    if(!cfg.x){
+      cfg.x = MARKER_WIDTH;
+    }
+    if(!cfg.y){
+      cfg.y = ALIGN_Y;
+    }
+    labelShape = _self.addShape(&#39;label&#39;,cfg);
 		_self.set(&#39;labelShape&#39;,labelShape);
 	},
 	//创建跟序列相关的图形

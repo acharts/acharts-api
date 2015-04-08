@@ -43,10 +43,22 @@ Legend.ATTRS = {
   zIndex : 8,
   elCls : &#39;x-chart-legend&#39;,
 <span id='Chart-Legend-property-items'>  /**
-</span>   * 子项的集合
+</span>   * 子项的集合 详见Chart.Legend.Item
    * @type {Array}
    */
   items : null,
+
+<span id='Chart-Legend-property-spacingX'>  /**
+</span>   * 排布时子项之间x间距 可以是一个padding数组 默认是5
+   * @type {Array || Number}
+   */
+  spacingX : PADDING,
+
+<span id='Chart-Legend-property-spacingY'>  /**
+</span>   * 排布时子项之间y间距 可以是一个padding数组 默认是5
+   * @type {Array || Number}
+   */
+  spacingY : PADDING,
 
 <span id='Chart-Legend-property-itemCfg'>  /**
 </span>   * 子项的配置信息
@@ -59,6 +71,23 @@ Legend.ATTRS = {
    * @type {Boolean}
    */
   checkable : true,
+
+<span id='Chart-Legend-property-titleCfg'>  /**
+</span>   * 标题配置信息
+   * @type {Object}
+   */
+  titleCfg: {
+    &#39;text-anchor&#39;: &#39;start&#39;,
+    &#39;font-size&#39;: 12,
+    y: 10,
+    x: 15
+  },
+
+<span id='Chart-Legend-property-title'>  /**
+</span>   * 标题
+   * @type {String}
+   */
+  title: null,
 
 <span id='Chart-Legend-property-leaveChecked'>  /**
 </span>   * 是否保留最后一项勾选
@@ -139,6 +168,7 @@ Util.augment(Legend,{
   renderUI : function(){
     var _self = this
     Legend.superclass.renderUI.call(_self);
+    _self._renderTitle();
     _self._renderItems();
     _self._renderBorder();    
   },
@@ -290,6 +320,45 @@ Util.augment(Legend,{
     itemsGroup.addGroup(Item,cfg);
   },
 
+  _renderTitle: function(){
+    var _self = this,
+      titleCfg = _self.get(&#39;titleCfg&#39;),
+      title = _self.get(&#39;title&#39;),
+      titleShape,
+      cfg;
+
+    if (title) {
+      cfg = Util.mix({},titleCfg,{
+        text : title
+      });
+      titleShape = _self.addShape(&#39;text&#39;,cfg);
+      _self.set(&#39;titleShape&#39;,titleShape);
+    }
+  },
+  // 获取title的高度
+  _getTitleHeight: function(){
+    var _self = this,
+      titleShape = _self.get(&#39;titleShape&#39;),
+      rst = 0,
+      bbox;
+    if (titleShape) {
+      bbox = titleShape.getBBox();
+      rst = bbox.height + bbox.y;
+    }
+    return rst;
+  },
+  // 获取title 宽度
+  _getTitleWidth: function(){
+    var _self = this,
+      titleShape = _self.get(&#39;titleShape&#39;),
+      rst = 0,
+      bbox;
+    if (titleShape) {
+      bbox = titleShape.getBBox();
+      rst = bbox.width + bbox.x + PADDING;
+    }
+    return rst;
+  },
   //生成边框
   _renderBorder : function(){
     var _self = this,
@@ -372,13 +441,14 @@ Util.augment(Legend,{
   _getNextX : function(){
     var _self = this,
       layout = _self.get(&#39;layout&#39;),
-      
-      nextX = PADDING;
+      spacing = _self.get(&#39;spacingX&#39;),
+      nextX = spacing;
+
     if(layout == &#39;horizontal&#39;){
       var children = _self.get(&#39;itemsGroup&#39;).get(&#39;children&#39;);
       Util.each(children,function(item){
         if(item.isGroup){
-          nextX += (item.getWidth() + PADDING);
+          nextX += (item.getWidth() + spacing);
         }
       });
     }
@@ -387,30 +457,40 @@ Util.augment(Legend,{
   //获取下一个图例项的y坐标
   _getNextY : function(){
     var _self = this,
-      layout = _self.get(&#39;layout&#39;);
+      spacing = _self.get(&#39;spacingY&#39;),
+      layout = _self.get(&#39;layout&#39;),
+      count = _self._getCount(),
+      titleHeight = _self._getTitleHeight(),
+      rst;
     if(layout == &#39;horizontal&#39;){
-      return PADDING;
+      rst = spacing;
     }else{
-      return LINE_HEIGHT * _self._getCount() + PADDING ;
+      rst = LINE_HEIGHT * count + spacing * (count + 1) ;
     }
+    return rst + titleHeight;
   },
   //获取总的宽度
   _getTotalWidth : function(){
-    var _self = this;
+    var _self = this,
+      spacing = _self.get(&#39;spacingX&#39;),
+      width,
+      titleWidth = _self._getTitleWidth();
+
     if(_self.get(&#39;layout&#39;) == &#39;horizontal&#39;){
-      return this._getNextX();
+      width = this._getNextX();
     }else{
       var children = _self.get(&#39;itemsGroup&#39;).get(&#39;children&#39;),
-        max = PADDING;
+        max = spacing;
       Util.each(children,function(item){
         var width = item.getWidth();
         if(item.isGroup &amp;&amp; width &gt; max){
           max = width;
         }
       });
-      return max + PADDING * 2;
+      width = max + spacing * 2;
     }
-    
+
+    return Math.max(width,titleWidth);
   },
   //获取整体的高度
   _getTotalHeight : function(){
@@ -418,7 +498,7 @@ Util.augment(Legend,{
       nextY = _self._getNextY();
 
     if(_self.get(&#39;layout&#39;) == &#39;horizontal&#39;){
-      return LINE_HEIGHT + PADDING * 2;
+      return LINE_HEIGHT + PADDING * 2 + _self._getTitleHeight();
     }
     return nextY + PADDING;
   }

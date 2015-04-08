@@ -467,7 +467,7 @@ Util.augment(Tooltip,{
 			}
 
 			_self.move(x,y);/**/
-			_self.moveCustom(x,y);
+			_self.moveCustom(x,y,after);
 
 			if(crossShape){
 				if(after){
@@ -489,9 +489,14 @@ Util.augment(Tooltip,{
 			height : bbox.height
 		});
 	},
-	moveCustom : function(x,y){
+	moveCustom : function(x,y,after){
 		var _self = this,
+			offset = _self.get(&#39;offset&#39;),
 			customDiv = _self.get(&#39;customDiv&#39;);
+
+		if(!after){
+			x += offset * 2;
+		}
 		if(customDiv &amp;&amp; _self.get(&#39;customFollow&#39;)){
 			var 
 				pTop = parseFloat(Util.getStyle(customDiv,&#39;paddingTop&#39;)),
@@ -507,8 +512,12 @@ Util.augment(Tooltip,{
 		item.index = index;
 		var _self = this,
 			customDiv = _self.get(&#39;customDiv&#39;),
-			listDom = find(customDiv,CLS_LIST),
-			itemTpl = _self.get(&#39;itemTpl&#39;),
+			listDom = find(customDiv,CLS_LIST);
+
+		if(!listDom){
+			return;
+		}
+		var	itemTpl = _self.get(&#39;itemTpl&#39;),
 			str = Util.substitute(itemTpl,item),
 			node = Util.createDom(str);
 		listDom.appendChild(node);
@@ -559,7 +568,7 @@ Util.augment(Tooltip,{
 	  	var cfg = Util.mix({},value,{
 				x : width,
 				y : y,
-				text : text
+				text : text + &#39;&#39;
 			},params);
 		  return group.addShape(&#39;text&#39;,cfg);
 	  }

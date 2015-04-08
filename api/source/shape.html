@@ -23,7 +23,9 @@
 <span id='Chart-Canvas-Shape'>/**
 </span> * @class Chart.Canvas.Shape
  * 图形的基类
+ *  - &lt;a href=&quot;http://spmjs.io/docs/achart-canvas/wiki/4-shape.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
  * @extends Chart.Canvas.Base
+ * @mixins Chart.Canvas.CanvasItem
  */
 var Shape = function(cfg){
   Shape.superclass.constructor.call(this,cfg);
@@ -219,17 +221,17 @@ Circle.ATTRS = {
 </span>   * 圆心的x坐标
    * @type {Number}
    */
-  cx : {},
+  cx : null,
 <span id='Chart-Canvas-Shape-Circle-property-cy'>  /**
 </span>   * 圆心的y坐标
    * @type {Number}
    */
-  cy : {},
+  cy : null,
 <span id='Chart-Canvas-Shape-Circle-property-r'>  /**
 </span>   * 圆的半径
    * @type {Number}
    */
-  r : {}
+  r : null
 };
 
 Util.extend(Circle,Shape);
@@ -250,22 +252,22 @@ Rect.ATTRS = {
 </span>   * 矩形的左定点x坐标
    * @type {Number}
    */
-  x : {},
+  x : null,
 <span id='Chart-Canvas-Shape-Rect-property-y'>  /**
 </span>   * 矩形的左定点y坐标
    * @type {Number}
    */
-  y : {},
+  y : null,
 <span id='Chart-Canvas-Shape-Rect-property-width'>  /**
 </span>   * 矩形的宽度
    * @type {Number}
    */
-  width : {},
+  width : null,
 <span id='Chart-Canvas-Shape-Rect-property-height'>  /**
 </span>   * 矩形的高度
    * @type {Number}
    */
-  height : {},
+  height : null,
 <span id='Chart-Canvas-Shape-Rect-property-r'>  /**
 </span>   * 圆角
    * @type {Number}
@@ -292,22 +294,22 @@ Ellipse.ATTRS = {
 </span>   * 矩形的左定点x坐标
    * @type {Number}
    */
-  cx : {},
+  cx : null,
 <span id='Chart-Canvas-Shape-Ellipse-property-cy'>  /**
 </span>   * 矩形的左定点y坐标
    * @type {Number}
    */
-  cy : {},
+  cy : null,
 <span id='Chart-Canvas-Shape-Ellipse-property-rx'>  /**
 </span>   * 矩形的宽度
    * @type {Number}
    */
-  rx : {},
+  rx : null,
 <span id='Chart-Canvas-Shape-Ellipse-property-ry'>  /**
 </span>   * 矩形的高度
    * @type {Number}
    */
-  ry : {}
+  ry : null
 };
 
 Util.extend(Ellipse,Shape);
@@ -327,7 +329,7 @@ Path.ATTRS = {
 </span>   * 路径
    * @type {String}
    */
-  path : {}
+  path : null
 };
 
 
@@ -349,22 +351,22 @@ Line.ATTRS = {
 </span>   * 起始x坐标
    * @type {Number}
    */
-  x1 : {},
+  x1 : null,
 <span id='Chart-Canvas-Shape-Line-property-y1'>  /**
 </span>   * 起始y坐标
    * @type {Number}
    */
-  y1 : {},
+  y1 : null,
 <span id='Chart-Canvas-Shape-Line-property-x2'>  /**
 </span>   * 终止x坐标
    * @type {Number}
    */
-  x2 : {},
+  x2 : null,
 <span id='Chart-Canvas-Shape-Line-property-y2'>  /**
 </span>   * 终止y坐标
    * @type {Number}
    */
-  y2 : {}
+  y2 : null
 };
 
 Util.extend(Line,Path);
@@ -535,27 +537,27 @@ Text.ATTRS = {
 </span>   * x轴坐标
    * @type {Number}
    */
-  x : {},
+  x : null,
 <span id='Chart-Canvas-Shape-Text-property-y'>  /**
 </span>   * y轴坐标
    * @type {Number}
    */
-  y : {},
+  y : null,
 <span id='Chart-Canvas-Shape-Text-property-text'>  /**
 </span>   * 显示的文本
    * @type {String}
    */
-  text : {},
+  text : null,
 <span id='Chart-Canvas-Shape-Text-property-font'>  /**
 </span>   * 字体相关的属性，也可以单独设置其中的属性: font-family,font-weight....
    * @type {String}
    */
-  &#39;font&#39; : {},
+  &#39;font&#39; : null,
 <span id='Chart-Canvas-Shape-Text-property-text-anchor'>  /**
 </span>   * 文本的对齐方式：默认对齐方式: &#39;middle&#39;
    * @type {String}
    */
-  &#39;text-anchor&#39; : {}
+  &#39;text-anchor&#39; : null
 };
 
 Util.extend(Text,Shape);
@@ -578,7 +580,7 @@ Label.ATTRS = {
 </span>   * 旋转角度
    * @type {Number}
    */
-  rotate : {}
+  rotate : null
 };
 
 Util.augment(Label,{
@@ -633,16 +635,12 @@ Marker.ATTRS = {
 </span>   * 起始x轴位置
    * @type {Number}
    */
-  x : {
-
-  },
+  x : null,
 <span id='Chart-Canvas-Shape-Marker-property-y'>  /**
 </span>   * 起始y轴位置
    * @type {Number}
    */
-  y : {
-
-  }
+  y : null
 };
 
 Marker.Symbols = {
@@ -828,27 +826,27 @@ Image.ATTRS = {
 </span>   * 路径
    * @type {String}
    */
-  src : {}, 
+  src : null, 
 <span id='Chart-Canvas-Shape-Image-property-x'>  /**
 </span>   * x轴位置
    * @type {Number}
    */
-  x : {}, 
+  x : null, 
 <span id='Chart-Canvas-Shape-Image-property-y'>  /**
 </span>   * y轴位置
    * @type {Number}
    */
-  y : {}, 
+  y : null, 
 <span id='Chart-Canvas-Shape-Image-property-width'>  /**
 </span>   * 宽度
    * @type {Number}
    */
-  width : {}, 
+  width : null, 
 <span id='Chart-Canvas-Shape-Image-property-height'>  /**
 </span>   * 高度
    * @type {Number}
    */
-  height : {}
+  height : null
 }
 
 Util.extend(Image,Shape);

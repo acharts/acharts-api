@@ -52,6 +52,15 @@ Labels.ATTRS = {
 <span id='Chart-Labels-property-label'>	/**
 </span>	 * 内部label的默认配置信息
 	 * @type {Object}
+	 * &lt;pre&gt;&lt;code&gt;
+	 * {
+     *   font : &#39;20px/1.5 &quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif&#39;,
+     *   stroke : &#39;#333&#39;,
+     *   x : 10,
+     *   y : 10,
+     *   rotate : 90
+     * }
+     * &lt;/code&gt;&lt;/pre&gt;
 	 */
 	label : null,
 <span id='Chart-Labels-property-renderer'>	/**
@@ -166,6 +175,9 @@ Util.augment(Labels,{
 		}
 		if(item.text == null){
 			item.text = &#39;&#39;;
+		}
+		if(item.text === &#39;&#39; &amp;&amp; Util.vml){
+			item.text = &#39; &#39;;
 		}
 		
 		item.text = item.text.toString();

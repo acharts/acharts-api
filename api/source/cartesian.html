@@ -46,6 +46,7 @@ var
  *  - &lt;a href=&quot;http://spmjs.io/docs/achart-series/wiki/02-cartesian.html&quot; target=&quot;_blank&quot;&gt;wiki&lt;/a&gt;
  *  
  * @extends Chart.Series
+ * @private
  */
 function Cartesian(cfg){
   Cartesian.superclass.constructor.call(this,cfg);
@@ -65,6 +66,17 @@ Cartesian.ATTRS = {
 <span id='Chart-Series-Cartesian-property-xAxis'>  /**
 </span>   * x坐标轴
    * @type {Chart.Axis}
+   * &lt;pre&gt;&lt;code&gt;
+   * {
+   *   type : &#39;number&#39; //指定坐标轴为数字类型
+   *   line : null, //去掉坐标轴标线
+   *   tickLine : null,//去掉坐标轴的tick
+   *   title : { //为坐标轴加一个标题
+   *     text : &#39;x轴&#39;,
+   *     y : 40
+   *   }
+   * }
+   * &lt;/code&gt;&lt;/pre&gt;
    */
   xAxis : null,
 <span id='Chart-Series-Cartesian-property-yAxis'>  /**
@@ -72,6 +84,12 @@ Cartesian.ATTRS = {
    * @type {Chart.Axis}
    */
   yAxis : null,
+
+<span id='Chart-Series-Cartesian-property-effectChart'>  /**
+</span>   * 数据改变时，是否重绘整个图表，一般发生在影响坐标轴时
+   * @type {Boolean}
+   */
+  effectChart : true,
 
   invert : false,
   
@@ -155,6 +173,9 @@ Util.augment(Cartesian,{
     if((type == &#39;number&#39; || type == &#39;time&#39;) &amp;&amp; _self.get(&#39;pointInterval&#39;)){
       return false;
     }
+    if(type == &#39;category&#39; &amp;&amp; !xAxis.get(&#39;autoTicks&#39;)){
+      return false;
+    }
     return true;
   },
 <span id='Chart-Series-Cartesian-method-getPointByValue'>  /**
@@ -171,7 +192,7 @@ Util.augment(Cartesian,{
 </span>   * @protected
    * 转换显示的值，一般用于层叠的数据序列中
    */
-  parseYValue : function(value){
+  parseYValue : function(value,index){
     return value;
   },
 <span id='Chart-Series-Cartesian-method-animateClip'>  /**
@@ -180,22 +201,26 @@ Util.augment(Cartesian,{
    * @param  {Function} callback 回调
    */
   animateClip : function(fn,callback){
-    var _self = this,
-      canvas = _self.get(&#39;canvas&#39;),
-      invert = _self.get(&#39;invert&#39;),
-      width = canvas.get(&#39;width&#39;),
-      duration = _self.get(&#39;duration&#39;),
-      height = canvas.get(&#39;height&#39;),
-      clip =  invert ? &#39;0,0,&#39; + width + &#39;,0&#39; : &#39;0,0,0,&#39; + height;
+    if(Util.svg){
+      var _self = this,
+        canvas = _self.get(&#39;canvas&#39;),
+        invert = _self.get(&#39;invert&#39;),
+        width = canvas.get(&#39;width&#39;),
+        duration = _self.get(&#39;duration&#39;),
+        height = canvas.get(&#39;height&#39;),
+        clip =  invert ? &#39;0,0,&#39; + width + &#39;,0&#39; : &#39;0,0,0,&#39; + height;
 
-    _self.attr(&#39;clip-rect&#39;,clip);
-    fn &amp;&amp; fn();
-    _self.animate({
-      &#39;clip-rect&#39; : &#39;0,0,&#39; + width + &#39;,&#39;+height
-    },duration,function(){
+      _self.attr(&#39;clip-rect&#39;,clip);
+      fn &amp;&amp; fn();
+      _self.animate({
+        &#39;clip-rect&#39; : &#39;0,0,&#39; + width + &#39;,&#39;+height
+      },duration,function(){
+        callback &amp;&amp; callback();
+        _self.attr(&#39;clip-rect&#39;,&#39;&#39;);
+      }); 
+    }else{
       callback &amp;&amp; callback();
-      _self.attr(&#39;clip-rect&#39;,&#39;&#39;);
-    }); 
+    }
   },
 <span id='Chart-Series-Cartesian-method-snapEqual'>  /**
 </span>   * @protected
@@ -258,9 +283,11 @@ Util.augment(Cartesian,{
     //如果是x轴，并且指定了开始节点
     if(type == &#39;xAxis&#39; &amp;&amp; (pointStart != null &amp;&amp;!(xAxis.get(&#39;type&#39;) == &#39;time&#39; &amp;&amp; pointStart == 0)) &amp;&amp; _self.get(&#39;pointInterval&#39;) /*&amp;&amp; !(xAxis.get(&#39;type&#39;) == &#39;time&#39;) &amp;&amp; pointStart == 0*/){
       var 
-        pointInterval = _self.get(&#39;pointInterval&#39;);
+        pointInterval = _self.get(&#39;pointInterval&#39;),
+        //只有一个点,默认长度是1
+        pointCount = (data.length - 1) == 0 ? 1 : (data.length - 1);
         rst.push(pointStart);
-        rst.push(pointStart + (data.length - 1) * pointInterval);
+        rst.push(pointStart + pointCount * pointInterval);
     }else{ 
       var xField = _self.get(&#39;xField&#39;),
         yField = _self.get(&#39;yField&#39;);
@@ -295,7 +322,7 @@ Util.augment(Cartesian,{
       xName = _self.getXName(),
       yName = _self.getYName(),
       x,
-      yValue = _self.parseYValue(value),
+      yValue = _self.parseYValue(value,index),
       y = yAxis.getOffset(yValue),
       originValue,
       xValue,
